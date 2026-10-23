@@ -72,7 +72,8 @@ final class PFB_Plugin {
     }
 
     $logged_in = is_user_logged_in();
-    $can_add = $logged_in && current_user_can('edit_posts');
+    $guest_allowed = (bool) get_option('pfb_allow_guest', false);
+    $can_add = ($logged_in && current_user_can('edit_posts')) || $guest_allowed;
     $redirect = home_url(add_query_arg([]));
     if (!empty($_SERVER['REQUEST_URI'])) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
       $redirect = home_url(wp_unslash($_SERVER['REQUEST_URI'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
@@ -88,10 +89,10 @@ final class PFB_Plugin {
 
     wp_localize_script('pfb-widget', 'PFB', [
       'allowNew' => $can_add ? '1' : '0',
-      'requireLogin' => '1',
+      'requireLogin' => $guest_allowed ? '0' : '1',
       'loggedIn' => $logged_in ? '1' : '0',
       'loginUrl' => wp_login_url($redirect),
-      'nonce' => $logged_in ? wp_create_nonce('wp_rest') : '',
+      'nonce' => wp_create_nonce('wp_rest'),
       'pageSlug' => self::current_slug(),
       'syncUrl' => esc_url_raw(rest_url('pfb/v1/sync')),
       'fileUrl' => esc_url_raw(add_query_arg('page', self::current_slug(), rest_url('pfb/v1/notes'))),

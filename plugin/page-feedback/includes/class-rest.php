@@ -14,11 +14,21 @@ class PFB_REST {
     add_action('rest_api_init', [self::class, 'register']);
   }
 
-  public static function can_read() {
+  public static function is_guest_allowed() {
+    return (bool) get_option('pfb_allow_guest', false);
+  }
+
+  public static function can_read(WP_REST_Request $request = null) {
+    if (self::is_guest_allowed()) {
+      return true;
+    }
     return current_user_can('edit_posts');
   }
 
-  public static function can_write() {
+  public static function can_write(WP_REST_Request $request = null) {
+    if (self::is_guest_allowed()) {
+      return true;
+    }
     return current_user_can('edit_posts');
   }
 

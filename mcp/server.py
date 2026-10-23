@@ -65,6 +65,9 @@ def rest_request(site: dict[str, str], method: str, path: str, body: dict | None
         headers["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     ctx = ssl.create_default_context()
+    if site.get("verify_ssl") is False:
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
     try:
         with urllib.request.urlopen(req, context=ctx, timeout=45) as resp:
             raw = resp.read().decode("utf-8")

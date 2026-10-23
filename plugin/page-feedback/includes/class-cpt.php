@@ -40,6 +40,7 @@ class PFB_CPT {
   public static function columns($cols) {
     return [
       'cb' => $cols['cb'] ?? '',
+      'pfb_thumb' => 'Preview',
       'title' => 'Note',
       'pfb_status' => 'Status',
       'pfb_page' => 'Page',
@@ -49,8 +50,26 @@ class PFB_CPT {
   }
 
   public static function column_content($col, $post_id) {
+    if ($col === 'pfb_thumb') {
+      $payload = get_post_meta($post_id, '_pfb_payload', true);
+      $img = '';
+      if (!empty($payload['image'])) {
+        $img = $payload['image'];
+      } elseif (!empty($payload['images']) && is_array($payload['images']) && !empty($payload['images'][0])) {
+        $img = $payload['images'][0];
+      }
+      if ($img) {
+        printf('<a href="%s" target="_blank"><img src="%s" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #ccd0d4;display:block;" alt="" /></a>', esc_url($img), esc_url($img));
+      } else {
+        echo '<span style="color:#a7aaad;">—</span>';
+      }
+    }
     if ($col === 'pfb_status') {
-      echo esc_html(get_post_meta($post_id, '_pfb_status', true) ?: 'open');
+      $status = get_post_meta($post_id, '_pfb_status', true) ?: 'open';
+      $bg = '#d63638'; $color = '#fff';
+      if ($status === 'done') { $bg = '#00a32a'; }
+      elseif ($status === 'needs_info') { $bg = '#dba617'; }
+      printf('<span style="background:%s;color:%s;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;display:inline-block;">%s</span>', esc_attr($bg), esc_attr($color), esc_html($status));
     }
     if ($col === 'pfb_page') {
       echo esc_html(get_post_meta($post_id, '_pfb_page', true));

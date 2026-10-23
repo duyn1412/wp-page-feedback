@@ -133,7 +133,7 @@
         if (!FILE_URL) {
           return { res: res, verified: false };
         }
-        return fetch(FILE_URL + "?t=" + Date.now(), { cache: "no-store" })
+        return fetch(FILE_URL + (FILE_URL.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" })
           .then(function (r2) {
             if (!r2.ok) {
               throw new Error("Saved, but could not re-read " + PAGE_SLUG + ".json (HTTP " + r2.status + ").");
@@ -294,8 +294,23 @@
       if (!e || !e.id) return;
       var id = String(e.id);
       if (deleted[id]) return;
-      if (!byId[id]) order.push(id);
-      byId[id] = e; /* local draft wins for same id */
+      if (!byId[id]) {
+        order.push(id);
+        byId[id] = e;
+      } else {
+        var s = byId[id];
+        /* If server marked done, keep done unless client explicitly reopened */
+        if (s.status === "done" && e.status !== "done" && !e.reopenedAt) {
+          e.status = "done";
+          if (s.resolution && !e.resolution) e.resolution = s.resolution;
+          if (s.resolvedAt && !e.resolvedAt) e.resolvedAt = s.resolvedAt;
+        }
+        if (s.status === "needs_info" && s.question && !e.repliedAt) {
+          e.status = "needs_info";
+          e.question = s.question;
+        }
+        byId[id] = Object.assign({}, s, e);
+      }
     });
     return order.map(function (id) {
       return byId[id];
@@ -376,7 +391,12 @@
       var cls = Array.prototype.slice
         .call(el.classList)
         .filter(function (c) {
-          return c.indexOf("fb-") !== 0 && c !== "is-active" && c !== "is-visible";
+          return (
+            c.indexOf("fb-") !== 0 &&
+            c !== "is-active" &&
+            c !== "is-visible" &&
+            !/^(post|page|term|tag|category)-\d+$/.test(c)
+          );
         })
         .slice(0, 2);
       if (cls.length) sel += "." + cls.map(CSS.escape).join(".");
@@ -397,6 +417,46 @@
       el = parent;
     }
     return path.join(" > ");
+  }
+
+  /* Resilient selector resolver: handles WordPress dynamic classes, DOM shifts */
+  function resolveTargetElement(sel) {
+    if (!sel || sel === "(global)") return null;
+    var el = null;
+    try {
+      el = document.querySelector(sel);
+    } catch (e) {}
+    if (el) return el;
+
+    /* Fallback 1: strip dynamic WordPress ID classes (.post-1234, .term-5, etc.) */
+    var stripped = sel.replace(/\.(post|page|term|tag|category)-\d+/g, "");
+    if (stripped !== sel) {
+      try {
+        el = document.querySelector(stripped);
+      } catch (e) {}
+      if (el) return el;
+    }
+
+    /* Fallback 2: strip :nth-of-type pseudo selectors */
+    var noNth = stripped.replace(/:nth-of-type\(\d+\)/g, "");
+    if (noNth !== stripped) {
+      try {
+        el = document.querySelector(noNth);
+      } catch (e) {}
+      if (el) return el;
+    }
+
+    /* Fallback 3: locate by innermost element selector */
+    var parts = sel.split(" > ");
+    if (parts.length > 1) {
+      var lastPart = parts[parts.length - 1].replace(/\.(post|page|term|tag|category)-\d+/g, "");
+      try {
+        el = document.querySelector(lastPart);
+      } catch (e) {}
+      if (el) return el;
+    }
+
+    return null;
   }
 
   /* ---------- styles ---------- */
@@ -428,8 +488,11 @@
   css += ".fb-form .fb-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.6rem;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
   css += ".fb-form button.fb-save{background:#e04545;border-color:#e04545;color:#fff;}";
-  css += ".fb-marker{position:fixed;z-index:9998;width:28px;height:28px;border-radius:999px;background:#e04545;color:#fff;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);font:700 13px/24px system-ui,sans-serif;text-align:center;cursor:pointer;}";
+  css += ".fb-marker{position:fixed;z-index:9998;width:28px;height:28px;border-radius:999px;background:#e04545;color:#fff;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);font:700 13px/24px system-ui,sans-serif;text-align:center;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}";
+  css += ".fb-marker:hover{transform:scale(1.15);box-shadow:0 4px 14px rgba(0,0,0,.4);}";
   css += ".fb-marker.fb-marker-needs{background:#c99200;}";
+  css += ".fb-marker.fb-marker-done{background:#1d8843;border-color:#fff;color:#fff;}";
+  css += ".fb-marker.fb-marker-done:hover{background:#157335;box-shadow:0 4px 14px rgba(29,136,67,.5);}";
   css += ".fb-panel{position:fixed;right:1rem;bottom:3.6rem;z-index:9999;width:min(360px,92vw);max-height:min(60vh,480px);overflow:auto;background:#fff;border:1px solid #d5dce8;border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.3);font:400 13px/1.45 system-ui,sans-serif;color:#121826;display:none;}";
   css += ".fb-panel.fb-open{display:block;}";
   css += ".fb-panel-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#fff;border-bottom:1px solid #eef1f6;font-weight:700;}";
@@ -813,36 +876,52 @@
   function renderMarkers() {
     clearMarkers();
     load().forEach(function (entry, i) {
-      if (entry.status === "done" || entry.scope === "global") return;
-      var el;
-      try {
-        el = document.querySelector(entry.selector);
-      } catch (e) {
-        el = null;
-      }
+      var el = resolveTargetElement(entry.selector);
       if (!el) return;
+      var isDone = entry.status === "done";
+      var isNeeds = entry.status === "needs_info";
       var m = document.createElement("button");
       m.type = "button";
       m.className =
         "fb-marker" +
-        (entry.status === "needs_info" ? " fb-marker-needs" : "");
+        (isDone ? " fb-marker-done" : isNeeds ? " fb-marker-needs" : "");
       m.setAttribute("data-fb-ui", "");
       m.textContent = i + 1;
-      m.title =
-        entry.status === "needs_info" && entry.question
-          ? "Needs your reply: " + entry.question
-          : entry.note || "";
+      m.title = isDone
+        ? "✓ Done (#" + (i + 1) + "): " + (entry.note || "") + (entry.resolution ? "\n→ " + entry.resolution : "") + "\n(Click to view / reopen)"
+        : isNeeds && entry.question
+          ? "Needs your reply (#" + (i + 1) + "): " + entry.question
+          : "#" + (i + 1) + ": " + (entry.note || "");
       m._fbTarget = el;
-      /* Click a marker → open the panel with that entry in edit mode */
+      /* Click a marker → open the panel with that entry */
       m.addEventListener("click", function (e) {
         e.stopPropagation();
-        startEdit(i);
         openPanel();
-        var ta = panel.querySelector(".fb-edit-ta");
-        if (ta) {
-          ta.scrollIntoView({ block: "center" });
-          ta.focus();
-          ta.setSelectionRange(ta.value.length, ta.value.length);
+        if (isDone) {
+          stopEdit();
+          renderPanel();
+          var itemEl = panel.querySelectorAll(".fb-item")[i];
+          if (itemEl) {
+            itemEl.scrollIntoView({ block: "center", behavior: "smooth" });
+            itemEl.style.transition = "outline .2s ease, box-shadow .2s ease";
+            itemEl.style.outline = "2px solid #1d8843";
+            itemEl.style.outlineOffset = "2px";
+            setTimeout(function () {
+              itemEl.style.outline = "";
+              itemEl.style.outlineOffset = "";
+            }, 3000);
+            var reopenBtn = itemEl.querySelector("[data-fb-reopen]");
+            if (reopenBtn) reopenBtn.focus();
+          }
+        } else {
+          startEdit(i);
+          renderPanel();
+          var ta = panel.querySelector(".fb-edit-ta");
+          if (ta) {
+            ta.scrollIntoView({ block: "center", behavior: "smooth" });
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+          }
         }
       });
       document.body.appendChild(m);

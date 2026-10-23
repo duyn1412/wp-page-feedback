@@ -177,8 +177,6 @@ class PFB_Notes {
       $entry['date'] = gmdate('Y-m-d H:i:s', (int) ($entry['ts'] / 1000)) . ' UTC';
     }
 
-    $entry = self::store_attachments($entry, $page_slug, $entry_id);
-
     $post_id = self::find_post_id($page_slug, $entry_id);
     $title = wp_strip_all_tags((string) ($entry['note'] ?? ''));
     $title = $title !== '' ? wp_html_excerpt($title, 80) : $entry_id;
@@ -201,6 +199,8 @@ class PFB_Notes {
       return is_wp_error($saved) ? $saved : new WP_Error('pfb_save', 'Could not save note.');
     }
     $post_id = (int) $saved;
+
+    $entry = self::store_attachments($entry, $page_slug, $entry_id, $post_id);
 
     $status = sanitize_key((string) ($entry['status'] ?? 'open'));
     if (!in_array($status, ['open', 'done', 'needs_info'], true)) {
@@ -360,17 +360,17 @@ class PFB_Notes {
     ];
   }
 
-  private static function store_attachments($entry, $slug, $entry_id) {
+  private static function store_attachments($entry, $slug, $entry_id, $parent_id = 0) {
     if (!empty($entry['images']) && is_array($entry['images'])) {
       foreach ($entry['images'] as $j => $img) {
-        $url = self::store_data_image($img, $slug, $entry_id, $j);
+        $url = self::store_data_image($img, $slug, $entry_id, $j, $parent_id);
         if ($url) {
           $entry['images'][$j] = $url;
         }
       }
     }
     if (!empty($entry['image']) && is_string($entry['image'])) {
-      $url = self::store_data_image($entry['image'], $slug, $entry_id, 0);
+      $url = self::store_data_image($entry['image'], $slug, $entry_id, 0, $parent_id);
       if ($url) {
         $entry['image'] = $url;
       }
@@ -378,7 +378,7 @@ class PFB_Notes {
     if (!empty($entry['files']) && is_array($entry['files'])) {
       $stored = [];
       foreach ($entry['files'] as $j => $file) {
-        $row = self::store_data_file($file, $slug, $entry_id, $j);
+        $row = self::store_data_file($file, $slug, $entry_id, $j, $parent_id);
         if ($row) {
           $stored[] = $row;
         }
@@ -392,7 +392,7 @@ class PFB_Notes {
     return $entry;
   }
 
-  private static function store_data_image($value, $slug, $entry_id, $index) {
+  private static function store_data_image($value, $slug, $entry_id, $index, $parent_id = 0) {
     if (!is_string($value) || strpos($value, 'data:image/') !== 0) {
       return $value;
     }
@@ -408,10 +408,10 @@ class PFB_Notes {
       return $value;
     }
     $filename = $slug . '-' . $entry_id . ($index > 0 ? '-' . $index : '') . '.' . $ext;
-    return self::sideload_bytes($bin, $filename, 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext)) ?: $value;
+    return self::sideload_bytes($bin, $filename, 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext), $parent_id) ?: $value;
   }
 
-  private static function store_data_file($file, $slug, $entry_id, $index) {
+  private static function store_data_file($file, $slug, $entry_id, $index, $parent_id = 0) {
     if (!is_array($file)) {
       return null;
     }
@@ -437,14 +437,14 @@ class PFB_Notes {
       return null;
     }
     $filename = $slug . '-' . $entry_id . '-file' . ($index > 0 ? '-' . $index : '') . '.' . $ext;
-    $url = self::sideload_bytes($bin, $filename, $m[1]);
+    $url = self::sideload_bytes($bin, $filename, $m[1], $parent_id);
     if (!$url) {
       return null;
     }
     return ['name' => $name, 'path' => $url];
   }
 
-  private static function sideload_bytes($bin, $filename, $mime) {
+  private static function sideload_bytes($bin, $filename, $mime, $parent_id = 0) {
     $upload = wp_upload_bits($filename, null, $bin);
     if (!empty($upload['error']) || empty($upload['url'])) {
       return '';
@@ -455,11 +455,13 @@ class PFB_Notes {
       'post_content' => '',
       'post_status' => 'inherit',
     ];
-    $attach_id = wp_insert_attachment($attachment, $upload['file']);
+    $attach_id = wp_insert_attachment($attachment, $upload['file'], $parent_id);
     if (is_wp_error($attach_id) || !$attach_id) {
       return $upload['url'];
     }
+    require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/image.php';
+    require_once ABSPATH . 'wp-admin/includes/media.php';
     $meta = wp_generate_attachment_metadata($attach_id, $upload['file']);
     if ($meta) {
       wp_update_attachment_metadata($attach_id, $meta);

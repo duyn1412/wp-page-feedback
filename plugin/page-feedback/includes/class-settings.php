@@ -41,6 +41,13 @@ class PFB_Settings {
         return (bool) $v;
       },
     ]);
+    register_setting('pfb', 'pfb_allow_guest', [
+      'type' => 'boolean',
+      'default' => false,
+      'sanitize_callback' => static function ($v) {
+        return (bool) $v;
+      },
+    ]);
   }
 
   public static function render() {
@@ -73,6 +80,17 @@ class PFB_Settings {
                 <input type="checkbox" name="pfb_allow_query_override" value="1" <?php checked(get_option('pfb_allow_query_override', true)); ?> />
                 Allow <code>?pfb=1</code> on a page URL (and <code>?pfb=0</code> to hide)
               </label>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Guest / Client access</th>
+            <td>
+              <label>
+                <input type="hidden" name="pfb_allow_guest" value="0" />
+                <input type="checkbox" name="pfb_allow_guest" value="1" <?php checked(get_option('pfb_allow_guest', false)); ?> />
+                Allow clients / guests without WordPress account to create feedback
+              </label>
+              <p class="description">Ideal for staging sites and client review sessions.</p>
             </td>
           </tr>
         </table>
