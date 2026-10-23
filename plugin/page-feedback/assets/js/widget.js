@@ -887,11 +887,12 @@
         (isDone ? " fb-marker-done" : isNeeds ? " fb-marker-needs" : "");
       m.setAttribute("data-fb-ui", "");
       m.textContent = i + 1;
+      var vpTag = entry.viewport ? " [" + entry.viewport + "]" : "";
       m.title = isDone
-        ? "✓ Done (#" + (i + 1) + "): " + (entry.note || "") + (entry.resolution ? "\n→ " + entry.resolution : "") + "\n(Click to view / reopen)"
+        ? "✓ Done (#" + (i + 1) + ")" + vpTag + ": " + (entry.note || "") + (entry.resolution ? "\n→ " + entry.resolution : "") + "\n(Click to view / reopen)"
         : isNeeds && entry.question
-          ? "Needs your reply (#" + (i + 1) + "): " + entry.question
-          : "#" + (i + 1) + ": " + (entry.note || "");
+          ? "Needs your reply (#" + (i + 1) + ")" + vpTag + ": " + entry.question
+          : "#" + (i + 1) + vpTag + ": " + (entry.note || "");
       m._fbTarget = el;
       /* Click a marker → open the panel with that entry */
       m.addEventListener("click", function (e) {
@@ -1048,6 +1049,9 @@
               (e.scope === "global"
                 ? '<span class="fb-scope">🌐 Page-wide</span>'
                 : "") +
+              (e.viewport
+                ? '<span class="fb-vp" style="font-size:11px;padding:2px 6px;border-radius:4px;background:#eef2f6;color:#334155;margin-right:6px;font-weight:600;">📱 ' + String(e.viewport).replace(/</g, "&lt;") + '</span>'
+                : "") +
               " #" +
               (i + 1) +
               " · " +
@@ -1149,6 +1153,7 @@
                 : "") +
               '<div class="fb-item-meta"><span>' +
               (e.date || new Date(e.ts).toLocaleString()) +
+              (e.viewport ? " · 📱 " + String(e.viewport).replace(/</g, "&lt;") : "") +
               (e.theme ? " · theme: " + String(e.theme).replace(/</g, "&lt;") : "") +
               "</span><span class=\"fb-item-actions\">" +
               (done
@@ -1520,11 +1525,16 @@
 
     formEl = document.createElement("div");
     formEl.className = "fb-form" + (isGlobal ? " fb-form-global" : "");
-    formEl.setAttribute("data-fb-ui", "");
+    var currentVp = window.innerWidth + "×" + window.innerHeight;
     formEl.innerHTML =
-      '<p class="fb-sel">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.45rem;">' +
+      '<p class="fb-sel" style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' +
       (isGlobal ? "🌐 General feedback for this page" : selector) +
       "</p>" +
+      '<span class="fb-vp-badge" title="Screen size at note creation" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#eef2f6;color:#334155;white-space:nowrap;flex-shrink:0;">📱 ' +
+      currentVp +
+      "</span>" +
+      "</div>" +
       '<textarea placeholder="' +
       (isGlobal
         ? "Overall comments about this page (layout, colors, general feel…)"
@@ -1659,6 +1669,9 @@
         ts: now,
         date: dateStr,
         theme: theme,
+        viewport: currentVp,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
       };
       if (attachedImages.length) entry.images = attachedImages.slice();
       if (attachedFiles.length) {

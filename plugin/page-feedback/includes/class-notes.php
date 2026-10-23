@@ -157,6 +157,7 @@ class PFB_Notes {
     $entry['theme'] = (string) get_post_meta($post->ID, '_pfb_theme', true);
     $entry['scope'] = (string) get_post_meta($post->ID, '_pfb_scope', true) ?: 'element';
     $entry['snippet'] = (string) $post->post_excerpt;
+    $entry['viewport'] = (string) get_post_meta($post->ID, '_pfb_viewport', true) ?: (string) ($payload['viewport'] ?? '');
     if (empty($entry['ts'])) {
       $entry['ts'] = (int) get_post_meta($post->ID, '_pfb_ts', true);
     }
@@ -217,6 +218,7 @@ class PFB_Notes {
     update_post_meta($post_id, '_pfb_theme', sanitize_text_field((string) ($entry['theme'] ?? '')));
     update_post_meta($post_id, '_pfb_scope', sanitize_key((string) ($entry['scope'] ?? 'element')));
     update_post_meta($post_id, '_pfb_ts', (int) $entry['ts']);
+    update_post_meta($post_id, '_pfb_viewport', sanitize_text_field((string) ($entry['viewport'] ?? '')));
     update_post_meta($post_id, '_pfb_payload', $entry);
 
     $post = get_post($post_id);

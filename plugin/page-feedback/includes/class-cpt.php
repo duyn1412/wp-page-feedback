@@ -43,6 +43,7 @@ class PFB_CPT {
       'pfb_thumb' => 'Preview',
       'title' => 'Note',
       'pfb_status' => 'Status',
+      'pfb_viewport' => 'Screen',
       'pfb_page' => 'Page',
       'pfb_selector' => 'Selector',
       'date' => 'Date',
@@ -70,6 +71,14 @@ class PFB_CPT {
       if ($status === 'done') { $bg = '#00a32a'; }
       elseif ($status === 'needs_info') { $bg = '#dba617'; }
       printf('<span style="background:%s;color:%s;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;display:inline-block;">%s</span>', esc_attr($bg), esc_attr($color), esc_html($status));
+    }
+    if ($col === 'pfb_viewport') {
+      $vp = get_post_meta($post_id, '_pfb_viewport', true);
+      if ($vp) {
+        printf('<span style="font-family:monospace;font-size:11px;background:#f0f0f1;padding:2px 6px;border-radius:3px;">%s</span>', esc_html($vp));
+      } else {
+        echo '<span style="color:#a7aaad;">—</span>';
+      }
     }
     if ($col === 'pfb_page') {
       echo esc_html(get_post_meta($post_id, '_pfb_page', true));
