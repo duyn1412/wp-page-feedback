@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "page-feedback": {
+      "command": "python3",
+      "args": [
+        "/Users/duynguyen/Desktop/projects/wp-page-feedback/mcp/server.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "sites": [
+    {
+      "id": "example",
+      "name": "Example Client",
+      "url": "https://example.com",
+      "user": "your-wp-username",
+      "app_password": "xxxx xxxx xxxx xxxx xxxx xxxx"
+    }
+  ]
+}
