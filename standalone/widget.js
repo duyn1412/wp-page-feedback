@@ -508,10 +508,16 @@
   css += ".fb-panel-head button[data-fb-clear-all]{color:#e04545;border-color:#f3c4c4;}";
   css += ".fb-item .fb-edit-ta{width:100%;box-sizing:border-box;min-height:60px;margin-top:.3rem;padding:.45rem .55rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
   css += ".fb-empty{padding:1rem .85rem;color:#8a94a6;}";
-  css += ".fb-attach{display:flex;align-items:center;gap:.5rem;margin-top:.55rem;flex-wrap:wrap;}";
+  css += ".fb-attach{display:flex;flex-direction:column;gap:.4rem;margin-top:.55rem;}";
+  css += ".fb-attach-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}";
   css += ".fb-attach input[type=file]{display:none;}";
-  css += ".fb-attach .fb-attach-btn{padding:.38rem .7rem;border-radius:8px;border:1px dashed #d5dce8;background:#f8fafc;font:600 11.5px system-ui,sans-serif;color:#5a6578;cursor:pointer;}";
+  css += ".fb-attach .fb-attach-btn{padding:.38rem .7rem;border-radius:8px;border:1px dashed #d5dce8;background:#f8fafc;font:600 11.5px system-ui,sans-serif;color:#5a6578;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}";
   css += ".fb-attach .fb-attach-btn:hover{border-color:#e04545;color:#e04545;}";
+  css += ".fb-capture-btn{padding:.38rem .7rem;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font:600 11.5px system-ui,sans-serif;color:#1e293b;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;}";
+  css += ".fb-capture-btn:hover{border-color:#e04545;color:#e04545;background:#fff5f5;}";
+  css += ".fb-capture-btn:disabled{opacity:.6;cursor:not-allowed;}";
+  css += ".fb-auto-cap-lbl{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#64748b;cursor:pointer;margin-left:auto;user-select:none;}";
+  css += ".fb-auto-cap-lbl input{margin:0;cursor:pointer;}";
   css += ".fb-attach-hint{font-size:10.5px;color:#8a94a6;width:100%;margin:0;}";
   css += ".fb-preview{position:relative;display:none;margin-top:.55rem;}";
   css += ".fb-preview img{display:block;max-width:100%;max-height:140px;border-radius:8px;border:1px solid #d5dce8;}";
@@ -593,6 +599,69 @@
       cb(null);
     };
     docReader.readAsDataURL(file);
+  }
+
+  function ensureHtml2Canvas(cb) {
+    if (window.html2canvas) {
+      cb(window.html2canvas);
+      return;
+    }
+    var base = (typeof PFB !== "undefined" && PFB.pluginUrl) || "";
+    var script = document.createElement("script");
+    script.src = base ? base + "assets/js/html2canvas.min.js" : "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    script.onload = function () { cb(window.html2canvas); };
+    script.onerror = function () {
+      var s2 = document.createElement("script");
+      s2.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      s2.onload = function () { cb(window.html2canvas); };
+      s2.onerror = function () { cb(null); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(script);
+  }
+
+  function captureTarget(targetEl, cb) {
+    if (!targetEl) {
+      if (cb) cb(null);
+      return;
+    }
+    ensureHtml2Canvas(function (h2c) {
+      if (!h2c) {
+        showToast("Không thể tải thư viện chụp ảnh màn hình", "err");
+        if (cb) cb(null);
+        return;
+      }
+
+      // Hide all feedback UI during capture so they don't appear in the image
+      var fbUIs = document.querySelectorAll("[data-fb-ui], .fb-selected-box, .fb-hover-box, .fb-form, .fb-panel, .fb-marker, .fb-dock");
+      var prevStyles = [];
+      fbUIs.forEach(function (ui, idx) {
+        prevStyles[idx] = ui.style.visibility;
+        ui.style.visibility = "hidden";
+      });
+
+      var scale = Math.min(2, window.devicePixelRatio || 1);
+      h2c(targetEl, {
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: scale,
+        backgroundColor: null
+      }).then(function (canvas) {
+        fbUIs.forEach(function (ui, idx) {
+          ui.style.visibility = prevStyles[idx];
+        });
+        var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        if (cb) cb(dataUrl);
+      }).catch(function (err) {
+        fbUIs.forEach(function (ui, idx) {
+          ui.style.visibility = prevStyles[idx];
+        });
+        log("screenshot error", err);
+        showToast("Lỗi chụp ảnh: " + (err.message || "Unknown error"), "err");
+        if (cb) cb(null);
+      });
+    });
   }
 
   function fileChipHtml(file, opts) {
@@ -1541,10 +1610,20 @@
         : "Comment on this element…") +
       '"></textarea>' +
       '<div class="fb-attach">' +
-      '<label class="fb-attach-btn">+ Attach files<input type="file" accept="' +
+      '<div class="fb-attach-row">' +
+      '<button type="button" class="fb-capture-btn" title="Chụp ảnh màn hình element này">📸 ' +
+      (isGlobal ? "Chụp màn hình" : "Chụp element") +
+      "</button>" +
+      '<label class="fb-attach-btn">+ Đính kèm file<input type="file" accept="' +
       FILE_ACCEPT +
       '" multiple /></label>' +
-      '<p class="fb-attach-hint">Images, DOC, DOCX, PDF, TXT — select multiple files</p>' +
+      (!isGlobal
+        ? '<label class="fb-auto-cap-lbl" title="Tự động chụp ảnh element mỗi khi chọn"><input type="checkbox" class="fb-auto-cap-cb"' +
+          (localStorage.getItem("pfb_auto_capture") === "1" ? " checked" : "") +
+          " /> Tự động chụp</label>"
+        : "") +
+      "</div>" +
+      '<p class="fb-attach-hint">📸 Chụp ảnh element hoặc đính kèm ảnh, file DOC, PDF, TXT</p>' +
       "</div>" +
       '<div class="fb-previews"></div>' +
       '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
@@ -1644,6 +1723,47 @@
       if (found) ev.preventDefault();
     });
 
+    var autoCapKey = "pfb_auto_capture";
+    var isAutoCap = localStorage.getItem(autoCapKey) === "1";
+    var captureBtn = formEl.querySelector(".fb-capture-btn");
+    var autoCapCb = formEl.querySelector(".fb-auto-cap-cb");
+
+    function doCapture() {
+      if (captureBtn) {
+        captureBtn.disabled = true;
+        captureBtn.textContent = "📸 Đang chụp...";
+      }
+      var targetToCapture = el || document.body;
+      captureTarget(targetToCapture, function (dataUrl) {
+        if (captureBtn) {
+          captureBtn.disabled = false;
+          captureBtn.textContent = isGlobal ? "📸 Chụp lại màn hình" : "📸 Chụp lại element";
+        }
+        if (dataUrl) {
+          addAttachment({ kind: "image", data: dataUrl });
+          showToast("✓ Đã chụp ảnh element!", "ok");
+        }
+      });
+    }
+
+    if (captureBtn) {
+      captureBtn.addEventListener("click", doCapture);
+    }
+
+    if (autoCapCb) {
+      autoCapCb.addEventListener("change", function () {
+        var checked = autoCapCb.checked;
+        localStorage.setItem(autoCapKey, checked ? "1" : "0");
+        if (checked && attachedImages.length === 0) {
+          doCapture();
+        }
+      });
+    }
+
+    if (el && isAutoCap) {
+      setTimeout(doCapture, 100);
+    }
+
     formEl.querySelector(".fb-cancel").addEventListener("click", removeForm);
     formEl.querySelector(".fb-save").addEventListener("click", function () {
       var note = ta.value.trim();
@@ -1673,7 +1793,10 @@
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
       };
-      if (attachedImages.length) entry.images = attachedImages.slice();
+      if (attachedImages.length) {
+        entry.images = attachedImages.slice();
+        entry.image = attachedImages[0];
+      }
       if (attachedFiles.length) {
         entry.files = attachedFiles.map(function (f) {
           return { name: f.name, data: f.data };

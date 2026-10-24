@@ -80,9 +80,17 @@ final class PFB_Plugin {
     }
 
     wp_enqueue_script(
+      'pfb-html2canvas',
+      PFB_URL . 'assets/js/html2canvas.min.js',
+      [],
+      '1.4.1',
+      true
+    );
+
+    wp_enqueue_script(
       'pfb-widget',
       PFB_URL . 'assets/js/widget.js',
-      [],
+      ['pfb-html2canvas'],
       PFB_VERSION,
       true
     );
@@ -97,6 +105,7 @@ final class PFB_Plugin {
       'syncUrl' => esc_url_raw(rest_url('pfb/v1/sync')),
       'fileUrl' => esc_url_raw(add_query_arg('page', self::current_slug(), rest_url('pfb/v1/notes'))),
       'mediaBase' => esc_url_raw(trailingslashit(home_url('/'))),
+      'pluginUrl' => esc_url_raw(PFB_URL),
     ]);
   }
 }
