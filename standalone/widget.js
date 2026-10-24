@@ -1732,14 +1732,17 @@
     var isAutoCap = localStorage.getItem(autoCapKey) === "1";
     var captureBtn = formEl.querySelector(".fb-capture-btn");
     var autoCapCb = formEl.querySelector(".fb-auto-cap-cb");
+    log("openForm mounted", { hasCaptureBtn: !!captureBtn, hasAutoCapCb: !!autoCapCb });
 
     function doCapture() {
+      log("doCapture starting");
       if (captureBtn) {
         captureBtn.disabled = true;
         captureBtn.textContent = "📸 Đang chụp...";
       }
       var targetToCapture = el || document.body;
       captureTarget(targetToCapture, function (dataUrl) {
+        log("captureTarget callback received", { hasDataUrl: !!dataUrl });
         if (captureBtn) {
           captureBtn.disabled = false;
           captureBtn.textContent = isGlobal ? "📸 Chụp lại màn hình" : "📸 Chụp lại element";
@@ -1752,7 +1755,11 @@
     }
 
     if (captureBtn) {
-      captureBtn.addEventListener("click", doCapture);
+      captureBtn.addEventListener("click", function (e) {
+        log("captureBtn clicked!");
+        e.stopPropagation();
+        doCapture();
+      });
     }
 
     if (autoCapCb) {
