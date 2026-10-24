@@ -1526,7 +1526,11 @@
   }
 
   function isUi(el) {
-    return el.closest("[data-fb-ui]") !== null;
+    return (
+      el.closest(
+        "[data-fb-ui], .fb-form, .fb-selected-box, .fb-hover-box, .fb-panel, .fb-marker, .fb-dock, .fb-toast"
+      ) !== null
+    );
   }
 
   document.addEventListener(
@@ -1594,6 +1598,7 @@
 
     formEl = document.createElement("div");
     formEl.className = "fb-form" + (isGlobal ? " fb-form-global" : "");
+    formEl.setAttribute("data-fb-ui", "");
     var currentVp = window.innerWidth + "×" + window.innerHeight;
     formEl.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.45rem;">' +
