@@ -627,7 +627,7 @@
     }
     ensureHtml2Canvas(function (h2c) {
       if (!h2c) {
-        showToast("Không thể tải thư viện chụp ảnh màn hình", "err");
+        showToast("Failed to load screenshot library", "err");
         if (cb) cb(null);
         return;
       }
@@ -658,7 +658,7 @@
           ui.style.visibility = prevStyles[idx];
         });
         log("screenshot error", err);
-        showToast("Lỗi chụp ảnh: " + (err.message || "Unknown error"), "err");
+        showToast("Screenshot capture error: " + (err.message || "Unknown error"), "err");
         if (cb) cb(null);
       });
     });
@@ -1616,19 +1616,21 @@
       '"></textarea>' +
       '<div class="fb-attach">' +
       '<div class="fb-attach-row">' +
-      '<button type="button" class="fb-capture-btn" title="Chụp ảnh màn hình element này">📸 ' +
-      (isGlobal ? "Chụp màn hình" : "Chụp element") +
+      '<button type="button" class="fb-capture-btn" title="' +
+      (isGlobal ? "Take a screenshot of current screen" : "Take a screenshot of this element") +
+      '">📸 ' +
+      (isGlobal ? "Capture screen" : "Capture element") +
       "</button>" +
-      '<label class="fb-attach-btn">+ Đính kèm file<input type="file" accept="' +
+      '<label class="fb-attach-btn">+ Attach files<input type="file" accept="' +
       FILE_ACCEPT +
       '" multiple /></label>' +
       (!isGlobal
-        ? '<label class="fb-auto-cap-lbl" title="Tự động chụp ảnh element mỗi khi chọn"><input type="checkbox" class="fb-auto-cap-cb"' +
+        ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb"' +
           (localStorage.getItem("pfb_auto_capture") === "1" ? " checked" : "") +
-          " /> Tự động chụp</label>"
+          " /> Auto-capture</label>"
         : "") +
       "</div>" +
-      '<p class="fb-attach-hint">📸 Chụp ảnh element hoặc đính kèm ảnh, file DOC, PDF, TXT</p>' +
+      '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
       "</div>" +
       '<div class="fb-previews"></div>' +
       '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
@@ -1738,18 +1740,18 @@
       log("doCapture starting");
       if (captureBtn) {
         captureBtn.disabled = true;
-        captureBtn.textContent = "📸 Đang chụp...";
+        captureBtn.textContent = "📸 Capturing...";
       }
       var targetToCapture = el || document.body;
       captureTarget(targetToCapture, function (dataUrl) {
         log("captureTarget callback received", { hasDataUrl: !!dataUrl });
         if (captureBtn) {
           captureBtn.disabled = false;
-          captureBtn.textContent = isGlobal ? "📸 Chụp lại màn hình" : "📸 Chụp lại element";
+          captureBtn.textContent = isGlobal ? "📸 Recapture screen" : "📸 Recapture element";
         }
         if (dataUrl) {
           addAttachment({ kind: "image", data: dataUrl });
-          showToast("✓ Đã chụp ảnh element!", "ok");
+          showToast(isGlobal ? "✓ Screen captured!" : "✓ Element captured!", "ok");
         }
       });
     }
