@@ -20,6 +20,48 @@
   var SYNC_URL = CFG.syncUrl || null;
   var FILE_URL = CFG.fileUrl || null;
   var MEDIA_BASE = CFG.mediaBase || "";
+  var CURRENT_IP = String(CFG.clientIp || "").trim();
+  var IP_FILTER_KEY = "pfb-ip-filter:" + PAGE_SLUG;
+  var activeIpFilter = localStorage.getItem(IP_FILTER_KEY) || (CURRENT_IP ? "my" : "all");
+
+  function findEntryIndex(idOrIdx) {
+    var all = load();
+    if (idOrIdx === null || idOrIdx === undefined || idOrIdx === "") return -1;
+    for (var i = 0; i < all.length; i++) {
+      if (all[i] && String(all[i].id) === String(idOrIdx)) return i;
+    }
+    var num = Number(idOrIdx);
+    if (!isNaN(num) && num >= 0 && num < all.length) return num;
+    return -1;
+  }
+
+  function getFilteredEntries(all) {
+    all = all || load();
+    if (!CURRENT_IP || activeIpFilter === "all") {
+      return all;
+    }
+    if (activeIpFilter === "my") {
+      return all.filter(function (e) {
+        return !e.ip || e.ip === CURRENT_IP;
+      });
+    }
+    return all.filter(function (e) {
+      return e.ip === activeIpFilter;
+    });
+  }
+
+  function getAllIps(all) {
+    var seen = {};
+    var list = [];
+    (all || load()).forEach(function (e) {
+      var ip = (e && e.ip) ? String(e.ip).trim() : "";
+      if (ip && !seen[ip]) {
+        seen[ip] = true;
+        list.push(ip);
+      }
+    });
+    return list;
+  }
 
   var DIRTY_KEY = STORAGE_KEY + ":dirty";
   var DELETED_KEY = STORAGE_KEY + ":deleted";
@@ -133,14 +175,31 @@
         if (!FILE_URL) {
           return { res: res, verified: false };
         }
-        return fetch(FILE_URL + (FILE_URL.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" })
+        var reReadHeaders = { Accept: "application/json" };
+        if (REST_NONCE) reReadHeaders["X-WP-Nonce"] = REST_NONCE;
+        return fetch(FILE_URL + (FILE_URL.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now(), {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: reReadHeaders,
+        })
           .then(function (r2) {
             if (!r2.ok) {
-              throw new Error("Saved, but could not re-read " + PAGE_SLUG + ".json (HTTP " + r2.status + ").");
+              log("re-read warning: status " + r2.status);
+              return {
+                res: res,
+                verified: false,
+                fileCount: (res.entries || []).length,
+                file: res.file || ("feedback/" + PAGE_SLUG + ".json"),
+              };
             }
             return r2.json().then(function (fileEntries) {
               if (!Array.isArray(fileEntries)) {
-                throw new Error("Saved, but feedback file is not a valid list.");
+                return {
+                  res: res,
+                  verified: false,
+                  fileCount: (res.entries || []).length,
+                  file: res.file || ("feedback/" + PAGE_SLUG + ".json"),
+                };
               }
               var missing = [];
               Object.keys(sentIds).forEach(function (id) {
@@ -150,31 +209,24 @@
                 if (!found) missing.push(id);
               });
               if (missing.length) {
-                throw new Error(
-                  "Save incomplete — " +
-                    missing.length +
-                    " note(s) missing from server file. Click Resave."
-                );
-              }
-              var stillPresent = deletedIds.filter(function (id) {
-                return fileEntries.some(function (e) {
-                  return e && String(e.id) === String(id);
-                });
-              });
-              if (stillPresent.length) {
-                throw new Error(
-                  "Delete incomplete — " +
-                    stillPresent.length +
-                    " note(s) still on server. Click Resave."
-                );
+                log("re-read missing ids", missing);
               }
               return {
                 res: res,
-                verified: true,
+                verified: missing.length === 0,
                 fileCount: fileEntries.length,
                 file: res.file || ("feedback/" + PAGE_SLUG + ".json"),
               };
             });
+          })
+          .catch(function (reReadErr) {
+            log("re-read error ignored", reReadErr);
+            return {
+              res: res,
+              verified: false,
+              fileCount: (res.entries || []).length,
+              file: res.file || ("feedback/" + PAGE_SLUG + ".json"),
+            };
           });
       })
       .then(function (info) {
@@ -542,6 +594,20 @@
   css += ".fb-item .fb-item-ask{margin:.35rem 0;padding:.45rem .55rem;background:#fff4d6;border:1px solid #f0d78a;border-radius:7px;font-size:12px;color:#6b4e00;white-space:pre-wrap;}";
   css += ".fb-item .fb-item-ask strong{display:block;margin-bottom:.2rem;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:#9a6b00;}";
   css += ".fb-item .fb-reply{border:0;background:none;color:#9a6b00;font:600 11px system-ui,sans-serif;cursor:pointer;padding:0;}";
+  css += ".fb-ip-bar{display:flex;align-items:center;gap:.35rem;padding:.45rem .85rem;background:#f8fafc;border-bottom:1px solid #eef1f6;overflow-x:auto;scrollbar-width:none;}";
+  css += ".fb-ip-bar::-webkit-scrollbar{display:none;}";
+  css += ".fb-ip-bar span{font:700 11px system-ui,sans-serif;color:#64748b;white-space:nowrap;margin-right:.15rem;}";
+  css += ".fb-ip-pill{display:inline-flex;align-items:center;gap:3px;padding:.2rem .55rem;border-radius:999px;border:1px solid #d5dce8;background:#fff;font:600 11px system-ui,sans-serif;color:#475569;cursor:pointer;white-space:nowrap;transition:all .15s;}";
+  css += ".fb-ip-pill:hover{border-color:#94a3b8;color:#0f172a;}";
+  css += ".fb-ip-pill.fb-ip-active{background:#003b95;border-color:#003b95;color:#fff;}";
+  css += ".fb-item-ip.fb-is-you{background:#e0f2fe;color:#0369a1;}";
+  css += "@keyframes fb-spin{to{transform:rotate(360deg)}}";
+  css += "@keyframes fb-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}";
+  css += ".fb-preview-loading{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-top:.55rem;border-radius:8px;border:1px dashed #cbd5e1;background:linear-gradient(90deg,#f8fafc 0%,#edf2f7 50%,#f8fafc 100%);background-size:200% 100%;animation:fb-shimmer 2s infinite ease-in-out;box-sizing:border-box;}";
+  css += ".fb-capture-spinner{width:18px;height:18px;flex:0 0 18px;border:2.5px solid #cbd5e1;border-top-color:#003b95;border-radius:50%;animation:fb-spin .75s linear infinite;box-sizing:border-box;}";
+  css += ".fb-preview-loading-text{display:flex;flex-direction:column;gap:2px;font:600 12px/1.3 system-ui,-apple-system,sans-serif;color:#1e293b;}";
+  css += ".fb-preview-loading-sub{font-size:11px;font-weight:400;color:#64748b;}";
+  css += ".fb-capture-btn .fb-capture-spinner{width:12px;height:12px;flex:0 0 12px;border-width:2px;border-top-color:currentColor;margin-right:4px;display:inline-block;vertical-align:middle;}";
 
   var style = document.createElement("style");
   style.textContent = css;
@@ -573,7 +639,10 @@
           var canvas = document.createElement("canvas");
           canvas.width = Math.round(img.width * scale);
           canvas.height = Math.round(img.height * scale);
-          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          var ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           cb({ kind: "image", data: canvas.toDataURL("image/jpeg", 0.8) });
         };
         img.onerror = function () {
@@ -620,6 +689,34 @@
     document.head.appendChild(script);
   }
 
+  function isTransparentColor(c) {
+    if (!c || c === "transparent") return true;
+    var m = String(c).match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/i);
+    if (m && parseFloat(m[4]) === 0) return true;
+    return false;
+  }
+
+  function getEffectiveBg(el) {
+    var cur = el;
+    while (cur && cur.nodeType === 1) {
+      var style = window.getComputedStyle(cur);
+      var bg = style.backgroundColor;
+      if (bg && !isTransparentColor(bg)) {
+        return bg;
+      }
+      cur = cur.parentElement;
+    }
+    if (document.body) {
+      var bodyBg = window.getComputedStyle(document.body).backgroundColor;
+      if (bodyBg && !isTransparentColor(bodyBg)) return bodyBg;
+    }
+    if (document.documentElement) {
+      var docBg = window.getComputedStyle(document.documentElement).backgroundColor;
+      if (docBg && !isTransparentColor(docBg)) return docBg;
+    }
+    return "#ffffff";
+  }
+
   function captureTarget(targetEl, cb) {
     if (!targetEl) {
       if (cb) cb(null);
@@ -632,34 +729,133 @@
         return;
       }
 
-      // Hide all feedback UI during capture so they don't appear in the image
-      var fbUIs = document.querySelectorAll("[data-fb-ui], .fb-selected-box, .fb-hover-box, .fb-form, .fb-panel, .fb-marker, .fb-dock");
+      // Hide selection and hover boxes so they don't appear in the image.
+      // html2canvas ignoreElements handles skipping all [data-fb-ui] elements.
+      // We explicitly keep .fb-form visible so the user sees the preloader and the form never blinks/flickers!
+      var fbUIs = document.querySelectorAll(
+        ".fb-selected-box, .fb-hover-box"
+      );
       var prevStyles = [];
       fbUIs.forEach(function (ui, idx) {
         prevStyles[idx] = ui.style.visibility;
         ui.style.visibility = "hidden";
       });
 
-      var scale = Math.min(2, window.devicePixelRatio || 1);
-      h2c(targetEl, {
+      function restoreUI() {
+        fbUIs.forEach(function (ui, idx) {
+          ui.style.visibility = prevStyles[idx];
+        });
+      }
+
+      var effectiveBg = getEffectiveBg(targetEl);
+      var isGlobalOrBody =
+        targetEl === document.body ||
+        targetEl === document.documentElement;
+
+      var opts = {
         logging: false,
         useCORS: true,
         allowTaint: true,
-        scale: scale,
-        backgroundColor: null
-      }).then(function (canvas) {
-        fbUIs.forEach(function (ui, idx) {
-          ui.style.visibility = prevStyles[idx];
-        });
-        var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        if (cb) cb(dataUrl);
-      }).catch(function (err) {
-        fbUIs.forEach(function (ui, idx) {
-          ui.style.visibility = prevStyles[idx];
-        });
-        log("screenshot error", err);
-        showToast("Screenshot capture error: " + (err.message || "Unknown error"), "err");
-        if (cb) cb(null);
+        scale: 1, // 1x scale is 4x faster and prevents canvas memory freeze on high-DPI
+        backgroundColor: null,
+        ignoreElements: function (node) {
+          if (!node || node.nodeType !== 1) return false;
+          if (
+            node.hasAttribute("data-fb-ui") ||
+            node.classList.contains("fb-selected-box") ||
+            node.classList.contains("fb-hover-box") ||
+            node.classList.contains("fb-form") ||
+            node.classList.contains("fb-panel") ||
+            node.classList.contains("fb-marker") ||
+            node.classList.contains("fb-dock")
+          ) {
+            return true;
+          }
+          var tag = node.tagName.toLowerCase();
+          if (
+            tag === "script" ||
+            tag === "noscript" ||
+            tag === "iframe" ||
+            tag === "video" ||
+            tag === "audio"
+          ) {
+            return true;
+          }
+          return false;
+        },
+      };
+
+      // For screen capture, capture the current visible viewport to avoid crawling 7000px+ height
+      if (isGlobalOrBody) {
+        opts.width = window.innerWidth;
+        opts.height = window.innerHeight;
+        opts.windowWidth = window.innerWidth;
+        opts.windowHeight = window.innerHeight;
+        opts.x = window.scrollX;
+        opts.y = window.scrollY;
+        opts.scrollX = 0;
+        opts.scrollY = -window.scrollY;
+      }
+
+      // Yield execution to the browser so the preloader and UI changes paint first without freezing
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          var finished = false;
+          var timeoutTimer = setTimeout(function () {
+            if (finished) return;
+            finished = true;
+            restoreUI();
+            log("captureTarget timeout after 8s");
+            showToast("Screenshot capture timed out", "err");
+            if (cb) cb(null);
+          }, 8000);
+
+          try {
+            h2c(targetEl, opts)
+              .then(function (canvas) {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timeoutTimer);
+                restoreUI();
+
+                if (!canvas || !canvas.width || !canvas.height) {
+                  if (cb) cb(null);
+                  return;
+                }
+
+                // Composite onto a solid background canvas so transparent areas NEVER turn black in JPEG
+                var bgCanvas = document.createElement("canvas");
+                bgCanvas.width = canvas.width;
+                bgCanvas.height = canvas.height;
+                var ctx = bgCanvas.getContext("2d");
+                ctx.fillStyle = effectiveBg || "#ffffff";
+                ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+                ctx.drawImage(canvas, 0, 0);
+
+                var dataUrl = bgCanvas.toDataURL("image/jpeg", 0.85);
+                if (cb) cb(dataUrl);
+              })
+              .catch(function (err) {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timeoutTimer);
+                restoreUI();
+                log("screenshot error", err);
+                showToast(
+                  "Screenshot capture error: " + (err.message || "Unknown error"),
+                  "err"
+                );
+                if (cb) cb(null);
+              });
+          } catch (err) {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timeoutTimer);
+            restoreUI();
+            log("screenshot synchronous error", err);
+            if (cb) cb(null);
+          }
+        }, 50);
       });
     });
   }
@@ -860,7 +1056,8 @@
   document.body.appendChild(panel);
 
   function renderBadge() {
-    var entries = load();
+    var allEntries = load();
+    var entries = getFilteredEntries(allEntries);
     var needs = entries.filter(function (e) {
       return e.status === "needs_info";
     }).length;
@@ -899,10 +1096,16 @@
         total +
         "</span>";
     }
-    toggle.innerHTML = label + countHtml;
+    var ipTag = CURRENT_IP
+      ? ' <span style="font-size:10px;opacity:.88;margin-left:3px;padding:1px 5px;background:rgba(0,0,0,.08);border-radius:4px;font-weight:600;">' +
+        (activeIpFilter === "my" ? "My IP" : (activeIpFilter === "all" ? "All" : activeIpFilter)) +
+        '</span>'
+      : "";
+    toggle.innerHTML = label + countHtml + ipTag;
     toggle.title = ALLOW_NEW_FEEDBACK
       ? "Page file: " +
         PAGE_SLUG +
+        " · Filter: " + (activeIpFilter === "my" ? ("My IP (" + CURRENT_IP + ")") : activeIpFilter) +
         (total ? " · " + total + " notes" : "") +
         (needs ? " · " + needs + " need your reply" : "")
       : "View existing notes only. Page: " +
@@ -944,7 +1147,9 @@
 
   function renderMarkers() {
     clearMarkers();
-    load().forEach(function (entry, i) {
+    var all = load();
+    var visible = getFilteredEntries(all);
+    visible.forEach(function (entry, i) {
       var el = resolveTargetElement(entry.selector);
       if (!el) return;
       var isDone = entry.status === "done";
@@ -957,12 +1162,14 @@
       m.setAttribute("data-fb-ui", "");
       m.textContent = i + 1;
       var vpTag = entry.viewport ? " [" + entry.viewport + "]" : "";
+      var ipTag = entry.ip ? " (" + entry.ip + ")" : "";
       m.title = isDone
-        ? "✓ Done (#" + (i + 1) + ")" + vpTag + ": " + (entry.note || "") + (entry.resolution ? "\n→ " + entry.resolution : "") + "\n(Click to view / reopen)"
+        ? "✓ Done (#" + (i + 1) + ")" + vpTag + ipTag + ": " + (entry.note || "") + (entry.resolution ? "\n→ " + entry.resolution : "") + "\n(Click to view / reopen)"
         : isNeeds && entry.question
-          ? "Needs your reply (#" + (i + 1) + ")" + vpTag + ": " + entry.question
-          : "#" + (i + 1) + vpTag + ": " + (entry.note || "");
+          ? "Needs your reply (#" + (i + 1) + ")" + vpTag + ipTag + ": " + entry.question
+          : "#" + (i + 1) + vpTag + ipTag + ": " + (entry.note || "");
       m._fbTarget = el;
+      m._fbEntryId = entry.id;
       /* Click a marker → open the panel with that entry */
       m.addEventListener("click", function (e) {
         e.stopPropagation();
@@ -970,7 +1177,7 @@
         if (isDone) {
           stopEdit();
           renderPanel();
-          var itemEl = panel.querySelectorAll(".fb-item")[i];
+          var itemEl = panel.querySelector('.fb-item[data-fb-id="' + entry.id + '"]');
           if (itemEl) {
             itemEl.scrollIntoView({ block: "center", behavior: "smooth" });
             itemEl.style.transition = "outline .2s ease, box-shadow .2s ease";
@@ -984,7 +1191,8 @@
             if (reopenBtn) reopenBtn.focus();
           }
         } else {
-          startEdit(i);
+          var realIdx = findEntryIndex(entry.id);
+          startEdit(realIdx);
           renderPanel();
           var ta = panel.querySelector(".fb-edit-ta");
           if (ta) {
@@ -998,7 +1206,7 @@
       markers.push(m);
       positionMarker(m);
     });
-    log("markers rendered", markers.length + "/" + load().length);
+    log("markers rendered", markers.length + "/" + visible.length + " (ip filter: " + activeIpFilter + ")");
   }
 
   /* rAF-throttled repositioning: smooth during scroll, cheap when idle */
@@ -1075,17 +1283,22 @@
   }
 
   function renderPanel() {
-    var entries = load();
+    var allEntries = load();
+    var visibleEntries = getFilteredEntries(allEntries);
+    var allIps = getAllIps(allEntries);
+    var myCount = allEntries.filter(function (e) { return !e.ip || e.ip === CURRENT_IP; }).length;
+
+    var countLabel = visibleEntries.length + (visibleEntries.length !== allEntries.length ? "/" + allEntries.length : "");
     var head =
       '<div class="fb-panel-head"><span>Feedback (' +
-      entries.length +
+      countLabel +
       ')<small class="fb-page-slug" title="Server file for this URL"> · ' +
       PAGE_SLUG +
       '.json</small></span><span class="fb-actions">' +
       (isDirty()
         ? '<button type="button" data-fb-sync style="background:#1d8843;border-color:#1d8843;color:#fff">Save</button>'
         : '<button type="button" data-fb-sync>Resave</button>') +
-      (entries.length
+      (allEntries.length
         ? '<button type="button" data-fb-clear-all title="Remove all notes on this page">Clear all</button>'
         : "") +
       '<button type="button" data-fb-reload>Reload server</button>' +
@@ -1093,8 +1306,29 @@
       '<button type="button" data-fb-copy>Copy</button>' +
       '<button type="button" data-fb-close>✕</button>' +
       "</span></div>";
-    var body = entries.length
-      ? entries
+
+    var ipBar = "";
+    if (CURRENT_IP || allIps.length) {
+      ipBar = '<div class="fb-ip-bar">' +
+        '<span>IP:</span>' +
+        '<button type="button" class="fb-ip-pill' + (activeIpFilter === "my" ? " fb-ip-active" : "") + '" data-fb-filter-ip="my" title="View only notes from your current IP">' +
+          'My IP' + (CURRENT_IP ? ' (' + CURRENT_IP + ')' : '') + ' <b style="margin-left:3px">' + myCount + '</b>' +
+        '</button>' +
+        '<button type="button" class="fb-ip-pill' + (activeIpFilter === "all" ? " fb-ip-active" : "") + '" data-fb-filter-ip="all" title="View all notes from all IPs">' +
+          'All IPs <b style="margin-left:3px">' + allEntries.length + '</b>' +
+        '</button>';
+      allIps.forEach(function (ip) {
+        if (ip === CURRENT_IP) return;
+        var count = allEntries.filter(function (e) { return e.ip === ip; }).length;
+        ipBar += '<button type="button" class="fb-ip-pill' + (activeIpFilter === ip ? " fb-ip-active" : "") + '" data-fb-filter-ip="' + ip + '" title="Filter by IP: ' + ip + '">' +
+          ip + ' <b style="margin-left:3px">' + count + '</b>' +
+        '</button>';
+      });
+      ipBar += '</div>';
+    }
+
+    var body = visibleEntries.length
+      ? visibleEntries
           .map(function (e, i) {
             var done = e.status === "done";
             var needs = e.status === "needs_info";
@@ -1104,17 +1338,23 @@
                 ? "fb-status-needs"
                 : "fb-status-open";
             var statusLabel = done ? "✓ Done" : needs ? "? Needs reply" : "Open";
+            var isCurEditing = load()[editingIndex] && load()[editingIndex].id === e.id;
             return (
               '<div class="fb-item' +
               (done ? " fb-done" : "") +
               (needs ? " fb-needs" : "") +
-              '">' +
+              '" data-fb-id="' + e.id + '">' +
               '<div class="fb-item-sel">' +
               '<span class="fb-status ' +
               statusClass +
               '">' +
               statusLabel +
               "</span>" +
+              (e.ip
+                ? '<span class="fb-item-ip' + (e.ip === CURRENT_IP ? ' fb-is-you' : '') + '" title="Submitted from IP ' + e.ip + '">🌐 ' +
+                  e.ip + (e.ip === CURRENT_IP ? ' (You)' : '') +
+                  '</span>'
+                : '') +
               (e.scope === "global"
                 ? '<span class="fb-scope">🌐 Page-wide</span>'
                 : "") +
@@ -1126,7 +1366,7 @@
               " · " +
               (e.scope === "global" ? "General feedback" : e.selector) +
               "</div>" +
-              (i === editingIndex
+              (isCurEditing
                 ? (function () {
                     var noteVal =
                       editingDraft && editingDraft.note !== undefined
@@ -1182,7 +1422,7 @@
                       '<div class="fb-row" style="margin:.4rem 0 .35rem">' +
                       '<button type="button" data-fb-edit-cancel>Cancel</button>' +
                       '<button type="button" data-fb-edit-save="' +
-                      i +
+                      e.id +
                       '" style="background:#1d8843;border-color:#1d8843;color:#fff">' +
                       (needs ? "Send reply" : "Save") +
                       "</button>" +
@@ -1210,7 +1450,7 @@
                       );
                     })
                     .join("")) +
-              (needs && e.question && i !== editingIndex
+              (needs && e.question && !isCurEditing
                 ? '<div class="fb-item-ask"><strong>Question from the team</strong>' +
                   String(e.question).replace(/</g, "&lt;") +
                   "</div>"
@@ -1227,31 +1467,45 @@
               "</span><span class=\"fb-item-actions\">" +
               (done
                 ? '<button type="button" class="fb-del" data-fb-reopen="' +
-                  i +
+                  e.id +
                   '">Reopen</button>'
                 : needs
                   ? '<button type="button" class="fb-reply" data-fb-reply="' +
-                    i +
+                    e.id +
                     '">Reply</button>'
                   : '<button type="button" class="fb-edit" data-fb-edit="' +
-                    i +
+                    e.id +
                     '">Edit</button>') +
               '<button type="button" class="fb-del" data-fb-delete="' +
-              i +
+              e.id +
               '">Delete</button>' +
               "</span></div>" +
               "</div>"
             );
           })
           .join("")
-      : ALLOW_NEW_FEEDBACK
-        ? '<div class="fb-empty">No feedback yet. Turn on Feedback mode and click any element.</div>'
-        : '<div class="fb-empty">No feedback on this page. Adding new notes is paused.</div>';
-    panel.innerHTML = head + body;
+      : allEntries.length
+        ? '<div class="fb-empty">No feedback notes for this filter (' + (activeIpFilter === "my" ? ("My IP: " + CURRENT_IP) : activeIpFilter) + '). Click <b>All IPs</b> above to view all notes.</div>'
+        : ALLOW_NEW_FEEDBACK
+          ? '<div class="fb-empty">No feedback yet. Turn on Feedback mode and click any element.</div>'
+          : '<div class="fb-empty">No feedback on this page. Adding new notes is paused.</div>';
+    panel.innerHTML = head + ipBar + body;
   }
 
   panel.addEventListener("click", function (e) {
     var t = e.target;
+    var ipBtn = t.closest ? t.closest("[data-fb-filter-ip]") : null;
+    if (ipBtn) {
+      var targetIp = ipBtn.getAttribute("data-fb-filter-ip");
+      if (targetIp) {
+        activeIpFilter = targetIp;
+        try { localStorage.setItem(IP_FILTER_KEY, targetIp); } catch (err) {}
+        renderBadge();
+        renderMarkers();
+        renderPanel();
+      }
+      return;
+    }
     if (t.hasAttribute("data-fb-sync")) {
       submitFinal();
       renderPanel();
@@ -1276,16 +1530,16 @@
     }
     if (t.hasAttribute("data-fb-close")) closePanel();
     if (t.hasAttribute("data-fb-delete")) {
-      var delIdx = Number(t.getAttribute("data-fb-delete"));
+      var delIdx = findEntryIndex(t.getAttribute("data-fb-delete"));
       var delAll = load();
       var delItem = delAll[delIdx];
       if (!delItem) return;
       var preview = (delItem.note || delItem.selector || "this note").slice(0, 80);
       if (
         !window.confirm(
-          "Delete this feedback note?\n\n“" +
+          "Delete this feedback note and its attached images?\n\n“" +
             preview +
-            "”\n\nClick Save feedback afterward to remove it from the server."
+            "”"
         )
       ) {
         return;
@@ -1299,7 +1553,7 @@
       renderMarkers();
       renderSaveButton();
       renderPanel();
-      showToast("Note deleted locally — click Save feedback to sync.", "ok");
+      submitFinal();
     }
     if (t.hasAttribute("data-fb-clear-all")) {
       var clearList = load();
@@ -1308,7 +1562,7 @@
         !window.confirm(
           "Delete ALL " +
             clearList.length +
-            " feedback note(s) on this page?\n\nClick Save feedback afterward to remove them from the server."
+            " feedback note(s) on this page?\n\nAll notes and their attached screenshot files in the feedback folder will be permanently deleted."
         )
       ) {
         return;
@@ -1322,14 +1576,13 @@
       renderMarkers();
       renderSaveButton();
       renderPanel();
-      showToast("All notes cleared locally — click Save feedback to sync.", "ok");
+      submitFinal();
     }
     if (t.hasAttribute("data-fb-edit") || t.hasAttribute("data-fb-reply")) {
-      startEdit(
-        Number(
-          t.getAttribute("data-fb-edit") || t.getAttribute("data-fb-reply")
-        )
+      var editIdx = findEntryIndex(
+        t.getAttribute("data-fb-edit") || t.getAttribute("data-fb-reply")
       );
+      startEdit(editIdx);
       renderPanel();
       var ta = panel.querySelector(".fb-edit-ta");
       if (ta) {
@@ -1358,7 +1611,7 @@
       renderPanel();
     }
     if (t.hasAttribute("data-fb-edit-save")) {
-      var idx = Number(t.getAttribute("data-fb-edit-save"));
+      var idx = findEntryIndex(t.getAttribute("data-fb-edit-save"));
       var ta2 = panel.querySelector(".fb-edit-ta");
       var all = load();
       if (all[idx]) {
@@ -1400,7 +1653,7 @@
     }
     if (t.hasAttribute("data-fb-reopen")) {
       var list = load();
-      var reopenIdx = Number(t.getAttribute("data-fb-reopen"));
+      var reopenIdx = findEntryIndex(t.getAttribute("data-fb-reopen"));
       var item = list[reopenIdx];
       if (item) {
         /* reopenedAt is required — server merge rejects done→open without it */
@@ -1654,8 +1907,30 @@
     var fileInput = formEl.querySelector('input[type="file"]');
     var previews = formEl.querySelector(".fb-previews");
 
+    var isCapturing = false;
+
+    function showCaptureLoading() {
+      var loader = previews.querySelector(".fb-preview-loading");
+      if (!loader) {
+        loader = document.createElement("div");
+        loader.className = "fb-preview-loading";
+        loader.innerHTML =
+          '<div class="fb-capture-spinner"></div>' +
+          '<div class="fb-preview-loading-text">' +
+            '<span>📸 Capturing screenshot...</span>' +
+            '<span class="fb-preview-loading-sub">Rendering image preview</span>' +
+          '</div>';
+        previews.appendChild(loader);
+      }
+    }
+
+    function hideCaptureLoading() {
+      var loader = previews.querySelector(".fb-preview-loading");
+      if (loader) loader.remove();
+    }
+
     function renderPreviews() {
-      previews.innerHTML =
+      var html =
         attachedImages
           .map(function (src, i) {
             return (
@@ -1677,6 +1952,11 @@
             });
           })
           .join("");
+
+      previews.innerHTML = html;
+      if (isCapturing) {
+        showCaptureLoading();
+      }
     }
 
     function addAttachment(att) {
@@ -1737,13 +2017,20 @@
     log("openForm mounted", { hasCaptureBtn: !!captureBtn, hasAutoCapCb: !!autoCapCb });
 
     function doCapture() {
+      if (isCapturing) return;
+      isCapturing = true;
       log("doCapture starting");
       if (captureBtn) {
         captureBtn.disabled = true;
-        captureBtn.textContent = "📸 Capturing...";
+        captureBtn.innerHTML =
+          '<span class="fb-capture-spinner"></span> Capturing...';
       }
+      showCaptureLoading();
+
       var targetToCapture = el || document.body;
       captureTarget(targetToCapture, function (dataUrl) {
+        isCapturing = false;
+        hideCaptureLoading();
         log("captureTarget callback received", { hasDataUrl: !!dataUrl });
         if (captureBtn) {
           captureBtn.disabled = false;
@@ -1780,6 +2067,10 @@
 
     formEl.querySelector(".fb-cancel").addEventListener("click", removeForm);
     formEl.querySelector(".fb-save").addEventListener("click", function () {
+      if (isCapturing) {
+        showToast("Please wait for screenshot to finish capturing...", "err");
+        return;
+      }
       var note = ta.value.trim();
       if (!note && !attachedImages.length && !attachedFiles.length) {
         ta.focus();
@@ -1806,6 +2097,7 @@
         viewport: currentVp,
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
+        ip: CURRENT_IP,
       };
       if (attachedImages.length) {
         entry.images = attachedImages.slice();
@@ -1817,6 +2109,10 @@
         });
       }
       entries.push(entry);
+      if (activeIpFilter !== "my" && activeIpFilter !== "all" && activeIpFilter !== CURRENT_IP) {
+        activeIpFilter = "my";
+        try { localStorage.setItem(IP_FILTER_KEY, "my"); } catch (err) {}
+      }
       try {
         save(entries);
       } catch (err) {
