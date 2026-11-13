@@ -47,25 +47,87 @@ class PFB_Notes {
     return $posts ? (int) $posts[0] : 0;
   }
 
+  public static function get_client_ip() {
+    $keys = [
+      'HTTP_CF_CONNECTING_IP',
+      'HTTP_TRUE_CLIENT_IP',
+      'HTTP_X_FORWARDED_FOR',
+      'HTTP_X_REAL_IP',
+      'REMOTE_ADDR',
+    ];
+    foreach ($keys as $key) {
+      if (!empty($_SERVER[$key])) {
+        $raw = (string) $_SERVER[$key];
+        if (strpos($raw, ',') !== false) {
+          $parts = explode(',', $raw);
+          $raw = trim($parts[0]);
+        }
+        $ip = filter_var($raw, FILTER_VALIDATE_IP);
+        if ($ip !== false) {
+          return $ip;
+        }
+      }
+    }
+    return '127.0.0.1';
+  }
+
   /**
    * @return array<int, array>
    */
-  public static function load_page($slug) {
+  public static function load_page($slug, $ip = '') {
     $slug = self::sanitize_slug($slug);
+    $meta = [
+      [
+        'key' => '_pfb_page',
+        'value' => $slug,
+      ],
+    ];
+    if (!empty($ip) && $ip !== 'all') {
+      $meta[] = [
+        'key' => '_pfb_ip',
+        'value' => sanitize_text_field($ip),
+      ];
+    }
     $posts = get_posts([
       'post_type' => 'pfb_note',
       'post_status' => ['publish', 'private'],
       'posts_per_page' => 200,
       'orderby' => 'date',
       'order' => 'ASC',
-      'meta_key' => '_pfb_page',
-      'meta_value' => $slug,
+      'meta_query' => $meta,
     ]);
     $out = [];
     foreach ($posts as $post) {
       $out[] = self::post_to_entry($post);
     }
     return $out;
+  }
+
+  public static function list_ips($slug = '') {
+    global $wpdb;
+    $where = "pm.meta_key = '_pfb_ip' AND p.post_type = 'pfb_note' AND p.post_status IN ('publish','private')";
+    if ($slug !== '') {
+      $slug = self::sanitize_slug($slug);
+      $where .= $wpdb->prepare(" AND p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_pfb_page' AND meta_value = %s)", $slug);
+    }
+    $rows = $wpdb->get_results(
+      "SELECT pm.meta_value AS ip, COUNT(*) AS n
+       FROM {$wpdb->postmeta} pm
+       INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+       WHERE {$where}
+       GROUP BY pm.meta_value
+       ORDER BY n DESC"
+    );
+    $ips = [];
+    foreach ((array) $rows as $row) {
+      if (!empty($row->ip)) {
+        $ips[] = [
+          'ip' => (string) $row->ip,
+          'count' => (int) $row->n,
+        ];
+      }
+    }
+    return $ips;
   }
 
   public static function list_pages() {
@@ -109,6 +171,12 @@ class PFB_Notes {
       $meta[] = [
         'key' => '_pfb_status',
         'value' => sanitize_key($args['status']),
+      ];
+    }
+    if (!empty($args['ip']) && $args['ip'] !== 'all') {
+      $meta[] = [
+        'key' => '_pfb_ip',
+        'value' => sanitize_text_field($args['ip']),
       ];
     }
     if ($meta) {
@@ -158,6 +226,7 @@ class PFB_Notes {
     $entry['scope'] = (string) get_post_meta($post->ID, '_pfb_scope', true) ?: 'element';
     $entry['snippet'] = (string) $post->post_excerpt;
     $entry['viewport'] = (string) get_post_meta($post->ID, '_pfb_viewport', true) ?: (string) ($payload['viewport'] ?? '');
+    $entry['ip'] = (string) get_post_meta($post->ID, '_pfb_ip', true) ?: (string) ($payload['ip'] ?? '');
     if (empty($entry['ts'])) {
       $entry['ts'] = (int) get_post_meta($post->ID, '_pfb_ts', true);
     }
@@ -177,6 +246,9 @@ class PFB_Notes {
     if (empty($entry['date'])) {
       $entry['date'] = gmdate('Y-m-d H:i:s', (int) ($entry['ts'] / 1000)) . ' UTC';
     }
+
+    $ip = !empty($entry['ip']) ? sanitize_text_field((string) $entry['ip']) : self::get_client_ip();
+    $entry['ip'] = $ip;
 
     $post_id = self::find_post_id($page_slug, $entry_id);
     $title = wp_strip_all_tags((string) ($entry['note'] ?? ''));
@@ -219,6 +291,7 @@ class PFB_Notes {
     update_post_meta($post_id, '_pfb_scope', sanitize_key((string) ($entry['scope'] ?? 'element')));
     update_post_meta($post_id, '_pfb_ts', (int) $entry['ts']);
     update_post_meta($post_id, '_pfb_viewport', sanitize_text_field((string) ($entry['viewport'] ?? '')));
+    update_post_meta($post_id, '_pfb_ip', $ip);
     update_post_meta($post_id, '_pfb_payload', $entry);
 
     $post = get_post($post_id);
@@ -232,6 +305,7 @@ class PFB_Notes {
       $post_id = $found ? (int) $found['wp_id'] : 0;
     }
     if ($post_id) {
+      self::delete_note_attachments($post_id);
       wp_delete_post($post_id, true);
     }
     return (bool) $post_id;
@@ -355,11 +429,117 @@ class PFB_Notes {
       $entries[] = $row;
     }
 
+    if (empty($entries)) {
+      self::clear_page_files($slug);
+    }
+
     return [
       'ok' => true,
       'count' => count($entries),
       'entries' => $entries,
     ];
+  }
+
+  public static function get_feedback_dir($slug = '') {
+    $upload_dir = wp_upload_dir();
+    $basedir = trailingslashit($upload_dir['basedir']) . 'page-feedback';
+    $baseurl = trailingslashit($upload_dir['baseurl']) . 'page-feedback';
+    if ($slug !== '') {
+      $slug = self::sanitize_slug($slug);
+      $basedir .= '/' . $slug;
+      $baseurl .= '/' . $slug;
+    }
+    if (!file_exists($basedir)) {
+      wp_mkdir_p($basedir);
+      $index_file = trailingslashit($basedir) . 'index.html';
+      if (!file_exists($index_file)) {
+        @file_put_contents($index_file, '');
+      }
+    }
+    return [
+      'dir' => $basedir,
+      'url' => $baseurl,
+    ];
+  }
+
+  public static function delete_note_attachments($post_id) {
+    $post_id = (int) $post_id;
+    if (!$post_id) {
+      return;
+    }
+
+    // 1. Files recorded in _pfb_files meta
+    $files = (array) get_post_meta($post_id, '_pfb_files', true);
+    foreach ($files as $f) {
+      if (!empty($f) && file_exists($f) && is_file($f)) {
+        @unlink($f);
+      }
+    }
+
+    // 2. URLs in _pfb_payload
+    $payload = get_post_meta($post_id, '_pfb_payload', true);
+    if (is_array($payload)) {
+      $urls = [];
+      if (!empty($payload['image'])) {
+        $urls[] = $payload['image'];
+      }
+      if (!empty($payload['images']) && is_array($payload['images'])) {
+        foreach ($payload['images'] as $img) {
+          $urls[] = $img;
+        }
+      }
+      if (!empty($payload['files']) && is_array($payload['files'])) {
+        foreach ($payload['files'] as $f) {
+          if (!empty($f['path'])) {
+            $urls[] = $f['path'];
+          }
+        }
+      }
+
+      $upload_dir = wp_upload_dir();
+      $baseurl = $upload_dir['baseurl'];
+      $basedir = $upload_dir['basedir'];
+
+      foreach (array_unique($urls) as $url) {
+        if (!is_string($url) || strpos($url, $baseurl) === false) {
+          continue;
+        }
+        $rel = str_replace($baseurl, '', $url);
+        $full = $basedir . $rel;
+        if (file_exists($full) && is_file($full)) {
+          @unlink($full);
+        }
+      }
+    }
+
+    // 3. Any WP attachments attached to this post (legacy)
+    $children = get_posts([
+      'post_type' => 'attachment',
+      'posts_per_page' => 50,
+      'post_parent' => $post_id,
+      'post_status' => 'any',
+      'fields' => 'ids',
+    ]);
+    foreach ((array) $children as $att_id) {
+      wp_delete_attachment($att_id, true);
+    }
+  }
+
+  public static function clear_page_files($slug) {
+    $slug = self::sanitize_slug($slug);
+    $dir_info = self::get_feedback_dir($slug);
+    $dir = $dir_info['dir'];
+    if (is_dir($dir)) {
+      $items = glob(trailingslashit($dir) . '*');
+      if ($items) {
+        foreach ($items as $item) {
+          if (is_file($item)) {
+            @unlink($item);
+          }
+        }
+      }
+      @rmdir($dir);
+    }
   }
 
   private static function store_attachments($entry, $slug, $entry_id, $parent_id = 0) {
@@ -372,9 +552,13 @@ class PFB_Notes {
       }
     }
     if (!empty($entry['image']) && is_string($entry['image'])) {
-      $url = self::store_data_image($entry['image'], $slug, $entry_id, 0, $parent_id);
-      if ($url) {
-        $entry['image'] = $url;
+      if (!empty($entry['images'][0]) && strpos($entry['image'], 'data:') === 0) {
+        $entry['image'] = $entry['images'][0];
+      } else {
+        $url = self::store_data_image($entry['image'], $slug, $entry_id, 0, $parent_id);
+        if ($url) {
+          $entry['image'] = $url;
+        }
       }
     }
     if (!empty($entry['files']) && is_array($entry['files'])) {
@@ -410,7 +594,7 @@ class PFB_Notes {
       return $value;
     }
     $filename = $slug . '-' . $entry_id . ($index > 0 ? '-' . $index : '') . '.' . $ext;
-    return self::sideload_bytes($bin, $filename, 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext), $parent_id) ?: $value;
+    return self::sideload_bytes($bin, $filename, 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext), $slug, $parent_id) ?: $value;
   }
 
   private static function store_data_file($file, $slug, $entry_id, $index, $parent_id = 0) {
@@ -439,35 +623,31 @@ class PFB_Notes {
       return null;
     }
     $filename = $slug . '-' . $entry_id . '-file' . ($index > 0 ? '-' . $index : '') . '.' . $ext;
-    $url = self::sideload_bytes($bin, $filename, $m[1], $parent_id);
+    $url = self::sideload_bytes($bin, $filename, $m[1], $slug, $parent_id);
     if (!$url) {
       return null;
     }
     return ['name' => $name, 'path' => $url];
   }
 
-  private static function sideload_bytes($bin, $filename, $mime, $parent_id = 0) {
-    $upload = wp_upload_bits($filename, null, $bin);
-    if (!empty($upload['error']) || empty($upload['url'])) {
+  private static function sideload_bytes($bin, $filename, $mime, $slug = '', $parent_id = 0) {
+    $dir_info = self::get_feedback_dir($slug);
+    $filepath = trailingslashit($dir_info['dir']) . $filename;
+    $fileurl = trailingslashit($dir_info['url']) . $filename;
+
+    $saved = @file_put_contents($filepath, $bin);
+    if ($saved === false) {
       return '';
     }
-    $attachment = [
-      'post_mime_type' => $mime,
-      'post_title' => preg_replace('/\.[^.]+$/', '', $filename),
-      'post_content' => '',
-      'post_status' => 'inherit',
-    ];
-    $attach_id = wp_insert_attachment($attachment, $upload['file'], $parent_id);
-    if (is_wp_error($attach_id) || !$attach_id) {
-      return $upload['url'];
+
+    if ($parent_id) {
+      $attached_files = (array) get_post_meta($parent_id, '_pfb_files', true);
+      if (!in_array($filepath, $attached_files, true)) {
+        $attached_files[] = $filepath;
+        update_post_meta($parent_id, '_pfb_files', $attached_files);
+      }
     }
-    require_once ABSPATH . 'wp-admin/includes/file.php';
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-    require_once ABSPATH . 'wp-admin/includes/media.php';
-    $meta = wp_generate_attachment_metadata($attach_id, $upload['file']);
-    if ($meta) {
-      wp_update_attachment_metadata($attach_id, $meta);
-    }
-    return $upload['url'];
+
+    return $fileurl;
   }
 }

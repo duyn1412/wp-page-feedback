@@ -19,17 +19,11 @@ class PFB_REST {
   }
 
   public static function can_read(WP_REST_Request $request = null) {
-    if (self::is_guest_allowed()) {
-      return true;
-    }
-    return current_user_can('edit_posts');
+    return current_user_can('manage_options');
   }
 
   public static function can_write(WP_REST_Request $request = null) {
-    if (self::is_guest_allowed()) {
-      return true;
-    }
-    return current_user_can('edit_posts');
+    return current_user_can('manage_options');
   }
 
   public static function register() {
@@ -53,12 +47,14 @@ class PFB_REST {
         'permission_callback' => [self::class, 'can_read'],
         'callback' => static function (WP_REST_Request $request) {
           $page = (string) $request->get_param('page');
+          $ip = (string) $request->get_param('ip');
           if ($page !== '') {
-            return new WP_REST_Response(PFB_Notes::load_page($page), 200);
+            return new WP_REST_Response(PFB_Notes::load_page($page, $ip), 200);
           }
           return rest_ensure_response([
             'notes' => PFB_Notes::query_notes([
               'status' => (string) $request->get_param('status'),
+              'ip' => $ip,
               'limit' => (int) $request->get_param('limit'),
             ]),
           ]);

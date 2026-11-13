@@ -71,9 +71,14 @@ final class PFB_Plugin {
       return;
     }
 
+    // Visible to administrators, or guests when guest access is enabled / ?pfb=1
+    $allow_guest = (bool) get_option('pfb_allow_guest', true) || (isset($_GET['pfb']) && $_GET['pfb'] === '1');
+    if (!$allow_guest && (!is_user_logged_in() || !current_user_can('manage_options'))) {
+      return;
+    }
+
     $logged_in = is_user_logged_in();
-    $guest_allowed = (bool) get_option('pfb_allow_guest', false);
-    $can_add = ($logged_in && current_user_can('edit_posts')) || $guest_allowed;
+    $can_add = true;
     $redirect = home_url(add_query_arg([]));
     if (!empty($_SERVER['REQUEST_URI'])) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
       $redirect = home_url(wp_unslash($_SERVER['REQUEST_URI'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
@@ -87,18 +92,23 @@ final class PFB_Plugin {
       true
     );
 
+    $widget_file = PFB_DIR . 'assets/js/widget.js';
+    $widget_ver = file_exists($widget_file) ? PFB_VERSION . '.' . filemtime($widget_file) : PFB_VERSION;
     wp_enqueue_script(
       'pfb-widget',
       PFB_URL . 'assets/js/widget.js',
       ['pfb-html2canvas'],
-      PFB_VERSION,
+      $widget_ver,
       true
     );
 
+    $client_ip = PFB_Notes::get_client_ip();
     wp_localize_script('pfb-widget', 'PFB', [
       'allowNew' => $can_add ? '1' : '0',
-      'requireLogin' => $guest_allowed ? '0' : '1',
+      'requireLogin' => '1',
       'loggedIn' => $logged_in ? '1' : '0',
+      'isAdmin' => '1',
+      'clientIp' => $client_ip,
       'loginUrl' => wp_login_url($redirect),
       'nonce' => wp_create_nonce('wp_rest'),
       'pageSlug' => self::current_slug(),

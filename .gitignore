@@ -3,3 +3,7 @@ __pycache__/
 mcp/sites.json
 **/.page-feedback/
 *.zip
+*.sqlite3
+*.db
+*.log
+

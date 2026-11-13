@@ -514,11 +514,48 @@
   /* ---------- styles ---------- */
   var css = "";
   css += ".fb-dock{position:fixed;right:1rem;bottom:1rem;z-index:9999;display:flex;align-items:center;gap:.5rem;}";
-  css += ".fb-toggle{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border:0;border-radius:999px;background:#0b1220;color:#fff;font:600 13px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);}";
+  css += ".fb-toggle{display:inline-flex;align-items:center;gap:.55rem;padding:.45rem .85rem .45rem 1rem;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:#0b1220;color:#fff;font:600 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:all .2s ease;user-select:none;}";
+  css += ".fb-toggle:hover{background:#151f32;box-shadow:0 12px 35px rgba(0,0,0,.45);}";
+  css += ".fb-toggle.fb-on{background:#0f172a;border-color:rgba(34,197,94,.4);box-shadow:0 10px 30px rgba(34,197,94,.25);}";
+  css += ".fb-switch-ui{display:inline-flex;align-items:center;gap:.35rem;}";
+  css += ".fb-switch-track{position:relative;width:38px;height:20px;border-radius:999px;background:#475569;transition:background-color .25s ease;display:inline-block;vertical-align:middle;flex-shrink:0;}";
+  css += ".fb-switch-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#ffffff;box-shadow:0 2px 5px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(0.4,0,0.2,1);}";
+  css += ".fb-switch-state{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;min-width:24px;color:#94a3b8;transition:color .2s ease;}";
+  css += ".fb-toggle.fb-on .fb-switch-track{background:#16a34a;}";
+  css += ".fb-toggle.fb-on .fb-switch-thumb{transform:translateX(18px);}";
+  css += ".fb-toggle.fb-on .fb-switch-state{color:#4ade80;}";
+  css += ".fb-toggle.fb-guide-pulse{animation:fbPulseGlow 2.2s infinite ease-in-out;border-color:#3b82f6;}";
+  css += "@keyframes fbPulseGlow{0%{box-shadow:0 0 0 0 rgba(59,130,246,.6),0 10px 30px rgba(0,0,0,.35)}70%{box-shadow:0 0 0 12px rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}}";
+  css += "@keyframes fbGuideBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}";
+  css += ".fb-guide-callout{position:fixed;right:1rem;bottom:4.3rem;z-index:10001;display:flex;flex-direction:column;align-items:flex-end;pointer-events:auto;animation:fbGuideBounce 2.5s infinite ease-in-out;}";
+  css += ".fb-guide-bubble{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;padding:.6rem .85rem;border-radius:10px;font:600 12.5px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 12px 32px rgba(37,99,235,.45);display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap;user-select:none;}";
+  css += ".fb-guide-bubble:hover{background:linear-gradient(135deg,#1d4ed8 0%,#1d4ed8 100%);}";
+  css += ".fb-guide-close{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;margin-left:2px;cursor:pointer;}";
+  css += ".fb-guide-close:hover{background:rgba(255,255,255,.35);}";
+  css += ".fb-guide-pointer{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid #2563eb;margin-right:48px;}";
+  css += ".fb-unsaved-banner{position:fixed;bottom:4.6rem;right:1rem;z-index:10002;max-width:min(440px,92vw);background:#0f172a;color:#f8fafc;border:1px solid #f59e0b;border-radius:12px;padding:.85rem 1.1rem;box-shadow:0 16px 40px rgba(0,0,0,.45);display:flex;align-items:center;gap:12px;font:500 12.5px/1.45 system-ui,-apple-system,sans-serif;animation:fbSlideDown .25s ease-out;}";
+  css += ".fb-unsaved-icon{font-size:22px;flex-shrink:0;}";
+  css += ".fb-unsaved-body{flex:1;}";
+  css += ".fb-unsaved-body strong{color:#fbbf24;display:block;font-weight:700;margin-bottom:2px;}";
+  css += ".fb-unsaved-btn{display:inline-flex;align-items:center;padding:.45rem .85rem;border-radius:8px;background:#f59e0b;color:#0f172a!important;font:700 12px/1 system-ui,sans-serif;text-decoration:none!important;white-space:nowrap;flex-shrink:0;transition:background .2s ease;}";
+  css += ".fb-unsaved-btn:hover{background:#d97706;}";
+  css += ".fb-unsaved-close{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:0;background:rgba(255,255,255,.1);color:#94a3b8;border-radius:50%;font-size:11px;cursor:pointer;flex-shrink:0;}";
+  css += ".fb-unsaved-close:hover{color:#fff;background:rgba(255,255,255,.2);}";
+  css += ".fb-mode-hint{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);z-index:10002;display:flex;align-items:center;gap:8px;padding:.55rem 1.15rem;border-radius:999px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.18);font:600 13px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 12px 36px rgba(0,0,0,.35);pointer-events:auto;cursor:pointer;animation:fbSlideDown .25s ease-out;white-space:nowrap;}";
+  css += ".fb-mode-hint:hover{background:#1e293b;}";
+  css += ".fb-mode-hint .fb-hint-badge{display:inline-block;padding:2px 8px;border-radius:6px;background:#16a34a;color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}";
+  css += ".fb-mode-hint .fb-hint-text{color:#f1f5f9;}";
+  css += ".fb-mode-hint .fb-hint-kbd{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.18);color:#fbbf24;font:600 11.5px ui-monospace,monospace;}";
+  css += ".fb-mode-hint .fb-hint-close{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:11px;margin-left:4px;}";
+  css += "@keyframes fbSlideDown{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}";
+  css += ".fb-form-tip{margin:.6rem 0 0;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font:500 11.5px/1.4 system-ui,sans-serif;color:#475569;display:flex;align-items:center;gap:6px;}";
+  css += ".fb-form-tip b{color:#0f172a;}";
   css += ".fb-savebtn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border:0;border-radius:999px;background:#9aa4b2;color:#fff;font:600 13px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.2);}";
   css += ".fb-savebtn.fb-dirty{background:#1d8843;}";
   css += ".fb-savebtn.fb-ok{background:#1d8843;}";
   css += ".fb-savebtn.fb-err{background:#e04545;}";
+  css += ".fb-savebtn.fb-login-btn{background:#2563eb;color:#fff;}";
+  css += ".fb-savebtn.fb-login-btn:hover{background:#1d4ed8;}";
   css += ".fb-savebtn:disabled{opacity:.85;cursor:default;}";
   css += ".fb-toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%);z-index:10001;max-width:min(420px,92vw);padding:.75rem 1.1rem;border-radius:12px;font:600 13px/1.4 system-ui,sans-serif;color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s ease;}";
   css += ".fb-toast.fb-show{opacity:1;}";
@@ -530,7 +567,6 @@
   css += ".fb-form-global{position:fixed;top:18vh;left:50%;transform:translateX(-50%);width:min(400px,92vw);}";
   css += ".fb-scope{display:inline-block;padding:.1em .5em;border-radius:999px;font:700 9.5px/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;margin-right:.3em;background:#eef2fb;color:#003b95;}";
   css += ".fb-toggle .fb-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.3em;height:1.3em;padding:0 .3em;border-radius:999px;background:#e04545;font-size:11px;}";
-  css += ".fb-toggle.fb-on{background:#e04545;}";
   css += "body.fb-mode, body.fb-mode *{cursor:crosshair!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
@@ -905,6 +941,109 @@
   var hoverBox = null;
   var formEl = null;
   var markers = [];
+  var modeHintEl = null;
+  var guideCalloutEl = null;
+  var loginWarningBannerEl = null;
+
+  function updateModeHint(on) {
+    if (on) {
+      if (!modeHintEl) {
+        modeHintEl = document.createElement("div");
+        modeHintEl.className = "fb-mode-hint";
+        modeHintEl.setAttribute("data-fb-ui", "");
+        modeHintEl.title = "Right-click anywhere or click here to exit Feedback Mode";
+        modeHintEl.innerHTML =
+          '<span class="fb-hint-badge">Feedback Mode: ON</span>' +
+          '<span class="fb-hint-text">💡 <b>Tip:</b> Click any element to comment · Right-click <span class="fb-hint-kbd">🖱️</span> anywhere to exit</span>' +
+          '<span class="fb-hint-close" title="Dismiss">✕</span>';
+        modeHintEl.addEventListener("click", function (e) {
+          e.stopPropagation();
+          setMode(false);
+        });
+        document.body.appendChild(modeHintEl);
+      }
+    } else {
+      if (modeHintEl) {
+        modeHintEl.remove();
+        modeHintEl = null;
+      }
+    }
+  }
+
+  function renderGuideCallout() {
+    if (mode) return;
+    if (guideCalloutEl) return;
+    try {
+      if (sessionStorage.getItem("pfb_guide_dismissed") === "1") return;
+    } catch (e) {}
+
+    guideCalloutEl = document.createElement("div");
+    guideCalloutEl.className = "fb-guide-callout";
+    guideCalloutEl.setAttribute("data-fb-ui", "");
+    guideCalloutEl.innerHTML =
+      '<div class="fb-guide-bubble">' +
+        '<span style="font-size:15px">👆</span>' +
+        '<span><b>Click switch to turn ON Feedback mode</b></span>' +
+        '<span class="fb-guide-close" title="Dismiss">✕</span>' +
+      '</div>' +
+      '<div class="fb-guide-pointer"></div>';
+
+    guideCalloutEl.querySelector(".fb-guide-close").addEventListener("click", function (e) {
+      e.stopPropagation();
+      try { sessionStorage.setItem("pfb_guide_dismissed", "1"); } catch (err) {}
+      if (guideCalloutEl) {
+        guideCalloutEl.remove();
+        guideCalloutEl = null;
+      }
+    });
+
+    guideCalloutEl.addEventListener("click", function (e) {
+      if (e.target.classList.contains("fb-guide-close")) return;
+      e.stopPropagation();
+      setMode(true);
+    });
+
+    document.body.appendChild(guideCalloutEl);
+  }
+
+  function showLoginWarningBanner() {
+    if (loginWarningBannerEl) {
+      loginWarningBannerEl.remove();
+      loginWarningBannerEl = null;
+    }
+    loginWarningBannerEl = document.createElement("div");
+    loginWarningBannerEl.className = "fb-unsaved-banner";
+    loginWarningBannerEl.setAttribute("data-fb-ui", "");
+    var redirectUrl = encodeURIComponent(window.location.href);
+    var loginHref = LOGIN_URL || ("/wp-login.php?redirect_to=" + redirectUrl);
+    loginWarningBannerEl.innerHTML =
+      '<span class="fb-unsaved-icon">⚠️</span>' +
+      '<div class="fb-unsaved-body">' +
+        '<strong>Unsaved Feedback:</strong> Your notes are stored locally in this browser. You must log in to save them to the server.' +
+      '</div>' +
+      '<a class="fb-unsaved-btn" href="' + loginHref + '">Log In Now</a>' +
+      '<button type="button" class="fb-unsaved-close" title="Dismiss">✕</button>';
+
+    loginWarningBannerEl.querySelector(".fb-unsaved-close").addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (loginWarningBannerEl) {
+        loginWarningBannerEl.remove();
+        loginWarningBannerEl = null;
+      }
+    });
+
+    document.body.appendChild(loginWarningBannerEl);
+  }
+
+  function checkUnsavedWarning() {
+    var hasNotes = isDirty() || load().length > 0;
+    if (!LOGGED_IN && hasNotes) {
+      showToast("⚠️ You have unsaved feedback! You must log in to save your notes to the server.", "err");
+      showLoginWarningBanner();
+    } else if (LOGGED_IN && isDirty()) {
+      showToast("⚠️ Note: You have unsaved changes. Don't forget to click 'Save feedback'!", "err");
+    }
+  }
 
   var dock = document.createElement("div");
   dock.className = "fb-dock";
@@ -984,6 +1123,23 @@
     saveBtn.classList.remove("fb-ok", "fb-err");
     saveBtn.classList.toggle("fb-dirty", dirty);
     saveBtn.disabled = false;
+
+    if (!LOGGED_IN) {
+      if (dirty || n) {
+        saveBtn.classList.add("fb-login-btn");
+        saveBtn.innerHTML = '🔒 <span>Log in to save</span>';
+        saveBtn.title = "Login required: Please log in to save your feedback to the server.";
+        saveBtn.disabled = false;
+      } else {
+        saveBtn.classList.remove("fb-login-btn");
+        saveBtn.innerHTML = '🔒 <span>Save feedback</span>';
+        saveBtn.title = "No notes yet · Log in to save to server";
+        saveBtn.disabled = true;
+      }
+      return;
+    }
+
+    saveBtn.classList.remove("fb-login-btn");
     if (dirty) {
       saveBtn.textContent =
         pendingDeletes && !n ? "Save deletions" : "Save feedback";
@@ -999,6 +1155,12 @@
   }
 
   function submitFinal() {
+    if (!LOGGED_IN) {
+      showToast("🔒 Login required: Please log in to save your feedback.", "err");
+      showLoginWarningBanner();
+      renderSaveButton();
+      return;
+    }
     var entries = load();
     var deletedIds = loadDeleted();
     if (!entries.length && !deletedIds.length) {
@@ -1047,6 +1209,21 @@
   saveBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     if (saving) return;
+    if (!LOGGED_IN) {
+      var n = load().length;
+      if (n > 0 || isDirty()) {
+        showToast("🔒 Login required: Please log in to save your feedback to the server.", "err");
+        showLoginWarningBanner();
+        if (LOGIN_URL) {
+          if (confirm("🔒 Login required to save feedback to the server.\n\nYour notes will remain safely stored in this browser.\n\nWould you like to log in now?")) {
+            window.location.href = LOGIN_URL;
+          }
+        }
+      } else {
+        showToast("🔒 Please log in and add notes first.", "err");
+      }
+      return;
+    }
     submitFinal();
   });
 
@@ -1065,8 +1242,9 @@
       return e.status === "open" || e.status === "needs_info";
     }).length;
     var total = entries.length;
-    var label = mode ? "Feedback: ON" : "Feedback";
-    if (!ALLOW_NEW_FEEDBACK) label = "View feedback";
+    toggle.classList.toggle("fb-on", mode && ALLOW_NEW_FEEDBACK);
+    toggle.classList.toggle("fb-guide-pulse", !mode && ALLOW_NEW_FEEDBACK);
+
     var countHtml = "";
     if (needs) {
       countHtml =
@@ -1101,17 +1279,27 @@
         (activeIpFilter === "my" ? "My IP" : (activeIpFilter === "all" ? "All" : activeIpFilter)) +
         '</span>'
       : "";
-    toggle.innerHTML = label + countHtml + ipTag;
-    toggle.title = ALLOW_NEW_FEEDBACK
-      ? "Page file: " +
-        PAGE_SLUG +
-        " · Filter: " + (activeIpFilter === "my" ? ("My IP (" + CURRENT_IP + ")") : activeIpFilter) +
-        (total ? " · " + total + " notes" : "") +
-        (needs ? " · " + needs + " need your reply" : "")
-      : "View existing notes only. Page: " +
-        PAGE_SLUG +
-        (total ? " · " + total + " notes" : "");
-    toggle.classList.toggle("fb-on", mode && ALLOW_NEW_FEEDBACK);
+
+    if (!ALLOW_NEW_FEEDBACK) {
+      toggle.innerHTML = "View feedback" + countHtml + ipTag;
+      toggle.title = "View notes on this page. Page: " + PAGE_SLUG + (total ? " · " + total + " notes" : "");
+      return;
+    }
+
+    var switchHtml =
+      '<span class="fb-switch-ui">' +
+        '<span style="display:inline-flex;align-items:center;gap:4px;">🎯 <span>Feedback</span></span>' +
+        '<span class="fb-switch-track"><span class="fb-switch-thumb"></span></span>' +
+        '<span class="fb-switch-state">' + (mode ? "ON" : "OFF") + '</span>' +
+      '</span>' +
+      countHtml +
+      ipTag;
+
+    toggle.innerHTML = switchHtml;
+    toggle.title = (mode
+      ? "Feedback Mode is ON · Right-click anywhere to exit"
+      : "Turn ON Feedback Mode (Click any element to add notes)") +
+      (total ? " · " + total + " notes" : "");
   }
 
   /* ---------- markers ---------- */
@@ -1295,9 +1483,11 @@
       ')<small class="fb-page-slug" title="Server file for this URL"> · ' +
       PAGE_SLUG +
       '.json</small></span><span class="fb-actions">' +
-      (isDirty()
-        ? '<button type="button" data-fb-sync style="background:#1d8843;border-color:#1d8843;color:#fff">Save</button>'
-        : '<button type="button" data-fb-sync>Resave</button>') +
+      (!LOGGED_IN
+        ? '<button type="button" data-fb-sync style="background:#2563eb;border-color:#2563eb;color:#fff" title="Login required to save feedback to the server">🔒 Log in to save</button>'
+        : isDirty()
+          ? '<button type="button" data-fb-sync style="background:#1d8843;border-color:#1d8843;color:#fff">Save</button>'
+          : '<button type="button" data-fb-sync>Resave</button>') +
       (allEntries.length
         ? '<button type="button" data-fb-clear-all title="Remove all notes on this page">Clear all</button>'
         : "") +
@@ -1507,6 +1697,16 @@
       return;
     }
     if (t.hasAttribute("data-fb-sync")) {
+      if (!LOGGED_IN) {
+        showToast("🔒 Login required: Please log in to save your feedback to the server.", "err");
+        showLoginWarningBanner();
+        if (LOGIN_URL) {
+          if (confirm("🔒 Login required to save feedback to the server.\n\nYour notes will remain safely stored in this browser.\n\nWould you like to log in now?")) {
+            window.location.href = LOGIN_URL;
+          }
+        }
+        return;
+      }
       submitFinal();
       renderPanel();
     }
@@ -1749,18 +1949,37 @@
   /* ---------- feedback mode ---------- */
   function setMode(on) {
     if (!ALLOW_NEW_FEEDBACK) on = false;
+    var wasOn = mode;
     mode = on;
     document.body.classList.toggle("fb-mode", on);
     renderBadge();
+    updateModeHint(on);
     if (!on) {
       removeHover();
       removeForm();
+      closePanel();
+      if (wasOn) {
+        checkUnsavedWarning();
+      }
+      renderGuideCallout();
+    } else {
+      if (guideCalloutEl) {
+        guideCalloutEl.remove();
+        guideCalloutEl = null;
+      }
+      showToast("🎯 Feedback Mode: ON — Click any element to add notes. Right-click anywhere to exit.", "ok");
     }
   }
 
   toggle.addEventListener("click", function (e) {
     e.stopPropagation();
     if (!ALLOW_NEW_FEEDBACK) {
+      if (panel.classList.contains("fb-open")) closePanel();
+      else openPanel();
+      return;
+    }
+    var countTarget = e.target.closest(".fb-count");
+    if (countTarget) {
       if (panel.classList.contains("fb-open")) closePanel();
       else openPanel();
       return;
@@ -1781,7 +2000,7 @@
   function isUi(el) {
     return (
       el.closest(
-        "[data-fb-ui], .fb-form, .fb-selected-box, .fb-hover-box, .fb-panel, .fb-marker, .fb-dock, .fb-toast"
+        "[data-fb-ui], .fb-form, .fb-selected-box, .fb-hover-box, .fb-panel, .fb-marker, .fb-dock, .fb-toast, .fb-mode-hint"
       ) !== null
     );
   }
@@ -1886,7 +2105,8 @@
       '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
       "</div>" +
       '<div class="fb-previews"></div>' +
-      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
+      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>' +
+      '<div class="fb-form-tip">💡 <span><b>Tip:</b> Right-click anywhere outside to dismiss popup</span></div>';
 
     if (el) {
       var rect = el.getBoundingClientRect();
@@ -2145,12 +2365,44 @@
     }
   });
 
+  /* Right-click anywhere on page exits feedback mode and closes feedback panel */
+  document.addEventListener(
+    "contextmenu",
+    function (e) {
+      // Allow native contextmenu inside textarea and text inputs (for copy/paste)
+      if (
+        e.target &&
+        (e.target.tagName === "TEXTAREA" ||
+          (e.target.tagName === "INPUT" &&
+            e.target.type !== "checkbox" &&
+            e.target.type !== "button" &&
+            e.target.type !== "submit"))
+      ) {
+        return;
+      }
+
+      var isPanelOpen = panel && panel.classList.contains("fb-open");
+      if (mode || formEl || isPanelOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (formEl) removeForm();
+        if (mode) setMode(false);
+        if (isPanelOpen) closePanel();
+
+        showToast("✓ Feedback mode turned off (right-click)", "ok");
+      }
+    },
+    true
+  );
+
   renderBadge();
   renderSaveButton();
+  renderGuideCallout();
   pullFromServer(function () {
     renderBadge();
     renderMarkers();
     log("init done", { entries: load().length, dirty: isDirty() });
   });
   })();
-/* cache-bust: 20260728-freeze-new */
+/* cache-bust: 20261104-english-enhanced */
