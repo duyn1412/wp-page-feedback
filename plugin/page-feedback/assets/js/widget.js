@@ -544,8 +544,8 @@
   css += "button.fb-marker[data-fb-ui]{appearance:none;box-sizing:border-box;position:fixed;z-index:9998;display:grid;place-items:center;width:28px;height:28px;min-width:0;min-height:0;max-width:none;max-height:none;margin:0;padding:0;border-radius:50%;--fb-marker-color:#c52e3d;background:var(--fb-marker-color);color:#fff;border:2px solid #fff;box-shadow:0 3px 10px #0f172a4d;font:700 12px/1 system-ui,sans-serif;text-align:center;letter-spacing:normal;text-transform:none;user-select:none;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}";
   css += "button.fb-marker[data-fb-ui]:hover{transform:scale(1.12);background:var(--fb-marker-color);color:#fff;box-shadow:0 4px 14px #0f172a66;}";
   css += "button.fb-marker.fb-marker-needs[data-fb-ui]{--fb-marker-color:#8a5700;} button.fb-marker.fb-marker-done[data-fb-ui]{--fb-marker-color:#167342;}";
-  css += "@keyframes fbMarkerPulse{0%{transform:scale(1);opacity:.5;}65%,100%{transform:scale(1.32);opacity:0;}}";
-  css += "@media(prefers-reduced-motion:no-preference){.fb-marker::after{content:'';position:absolute;inset:-2px;border:1px solid var(--fb-marker-color);border-radius:inherit;pointer-events:none;opacity:0;animation:fbMarkerPulse 1.5s ease-out 2;}}";
+  css += "@keyframes fbMarkerPulse{0%{transform:scale(1);opacity:.28;}70%,100%{transform:scale(1.18);opacity:0;}}";
+  css += "@media(prefers-reduced-motion:no-preference){.fb-marker::after{content:'';position:absolute;inset:-1px;border:1px solid var(--fb-marker-color);border-radius:inherit;pointer-events:none;opacity:0;animation:fbMarkerPulse 1.5s ease-out 2;}}";
   css += ".fb-panel{position:fixed;right:22px;bottom:86px;max-height:min(520px,70vh);max-height:min(520px,70dvh);z-index:9999;width:min(465px,calc(100vw - 28px));overflow:hidden;background:#fff;border:1px solid #e1e8f3;border-radius:20px;box-shadow:0 25px 75px #091b3950;font:400 13px/1.45 Inter,system-ui,sans-serif;color:#1c2b44;display:none;}";
   css += ".fb-panel.fb-open{display:flex;flex-direction:column;}";
   css += ".fb-panel *, .fb-panel{box-sizing:border-box;}";
