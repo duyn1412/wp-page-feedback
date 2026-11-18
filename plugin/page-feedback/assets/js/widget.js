@@ -499,10 +499,12 @@
   css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
   css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
   css += "@media(max-width:560px){.fb-dock{bottom:9px;right:8px;max-width:calc(100vw - 16px);}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
-  css += ".fb-dock .fb-inspect-featured{background:#2563eb;color:#fff;}.fb-dock button.fb-inspect-featured:hover:not(:disabled){background:#1d4ed8;color:#fff;}";
-  css += ".fb-inspect-guide{position:absolute;right:0;bottom:calc(100% + 9px);display:flex;align-items:flex-start;gap:8px;width:min(280px,calc(100vw - 20px));box-sizing:border-box;padding:10px 12px;background:#fff;color:#334155;border:1px solid #dbe7fc;border-radius:12px;box-shadow:0 8px 28px #10294d28;font:400 12px/1.45 system-ui,sans-serif;}";
-  css += ".fb-inspect-guide[hidden],.fb-inspect-guide button[hidden]{display:none;}.fb-inspect-guide strong{display:block;margin-bottom:2px;color:#1e293b;font-size:13px;}";
-  css += ".fb-inspect-guide button{display:grid;place-items:center;flex:none;margin-left:auto;width:28px;height:28px;padding:0;border:0;border-radius:7px;background:#eef2f7;color:#334155;font:700 16px/1 system-ui;cursor:pointer;}";
+  css += ".fb-inspect-tool{position:relative;}.fb-dock [data-fb-inspect][aria-pressed=true],.fb-dock [data-fb-inspect][aria-pressed=true]:hover{background:#2563eb;color:#fff;}";
+  css += ".fb-inspect-guide{position:absolute;left:-12px;bottom:calc(100% + 12px);width:min(220px,calc(100vw - 24px));box-sizing:border-box;padding:10px 12px;background:#fff;color:#334155;border:1px solid #dbe7fc;border-radius:12px;box-shadow:0 8px 28px #10294d28;font:400 12px/1.45 system-ui,sans-serif;}";
+  css += ".fb-inspect-guide[hidden]{display:none;}.fb-inspect-guide strong{display:block;margin-bottom:2px;color:#1e293b;font-size:13px;}";
+  css += ".fb-inspect-guide::after{content:'';position:absolute;top:100%;left:calc(12px + var(--fb-inspect-center,34px));transform:translateX(-50%);border:6px solid transparent;border-top-color:#fff;}";
+  css += "@keyframes fbInspectGlow{0%,100%{box-shadow:0 0 0 0 transparent;}50%{box-shadow:0 0 0 4px #6da3ff80,0 0 12px #3b82f69c;}}";
+  css += "@media(prefers-reduced-motion:no-preference){.fb-dock [data-fb-inspect]:not(:disabled){animation:fbInspectGlow .85s ease-in-out 2;}}";
   css += ".fb-unsaved-banner{position:fixed;bottom:4.6rem;right:1rem;z-index:10002;max-width:min(440px,92vw);background:#0f172a;color:#f8fafc;border:1px solid #f59e0b;border-radius:12px;padding:.85rem 1.1rem;box-shadow:0 16px 40px rgba(0,0,0,.45);display:flex;align-items:center;gap:12px;font:500 12.5px/1.45 system-ui,-apple-system,sans-serif;animation:fbSlideDown .25s ease-out;}";
   css += ".fb-unsaved-icon{font-size:22px;flex-shrink:0;}";
   css += ".fb-unsaved-body{flex:1;}";
@@ -985,12 +987,11 @@
   dock.innerHTML =
     '<span class="fb-tool"><span class="fb-tool-symbol" aria-hidden="true">♙</span>Customer</span>' +
     '<span class="fb-tool-divider" aria-hidden="true"></span>' +
-    '<button type="button" class="fb-tool" data-fb-inspect aria-pressed="false" title="Pick an element to leave feedback"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
+    '<div class="fb-inspect-tool"><button type="button" class="fb-tool" data-fb-inspect aria-pressed="false" title="Pick an element to leave feedback"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
+    '<div class="fb-inspect-guide" id="pfb-inspect-help" role="status" hidden><strong>Select an element</strong><span>Click or tap an element to add feedback. Press Esc or Inspect again to exit.</span></div></div>' +
     '<button type="button" class="fb-tool" data-fb-new aria-label="New feedback" title="New feedback"><span class="fb-tool-symbol" aria-hidden="true">＋</span><span class="fb-tool-new">New</span></button>' +
     '<span class="fb-tool-divider" aria-hidden="true"></span>' +
-    '<span class="fb-tool" title="' + (ALLOW_NEW_FEEDBACK ? "Adding feedback is enabled" : "Adding feedback is disabled") + '">' +
-    '<span class="fb-tool-dot' + (ALLOW_NEW_FEEDBACK ? "" : " fb-off") + '" aria-hidden="true"></span>' +
-    (ALLOW_NEW_FEEDBACK ? "ON" : "OFF") + '</span>' +
+    '<span class="fb-tool" data-fb-mode-status title="Inspect mode is off"><span class="fb-tool-dot fb-off" aria-hidden="true"></span><span>OFF</span></span>' +
     '<button type="button" class="fb-tool fb-toggle" aria-label="Feedback"><span class="fb-tool-symbol" aria-hidden="true">▤</span><span class="fb-count">0</span></button>';
 
   var toggle = dock.querySelector(".fb-toggle");
@@ -999,54 +1000,27 @@
   inspectBtn.disabled = !ALLOW_NEW_FEEDBACK;
   newBtn.disabled = !ALLOW_NEW_FEEDBACK;
 
-  var inspectGuide = document.createElement("div");
-  inspectGuide.className = "fb-inspect-guide";
-  inspectGuide.hidden = true;
-  inspectGuide.innerHTML =
-    '<div id="pfb-inspect-help" role="status"><strong></strong><span></span></div>' +
-    '<button type="button" aria-label="Dismiss Inspect guide">×</button>';
-  var guideTitle = inspectGuide.querySelector("strong");
-  var guideText = inspectGuide.querySelector("#pfb-inspect-help span");
-  var dismissGuide = inspectGuide.querySelector("button");
-  dock.appendChild(inspectGuide);
-  var inspectGuideSeen = false;
-  try { inspectGuideSeen = sessionStorage.getItem("pfb_inspect_guide_seen") === "1"; } catch (e) {}
+  var inspectGuide = dock.querySelector(".fb-inspect-guide");
+  var modeStatus = dock.querySelector("[data-fb-mode-status]");
+  var modeStatusDot = modeStatus.querySelector(".fb-tool-dot");
+  var modeStatusText = modeStatus.lastElementChild;
+  if (!ALLOW_NEW_FEEDBACK) modeStatus.title = "Adding feedback is disabled";
 
   function updateInspectGuide() {
-    var visible = ALLOW_NEW_FEEDBACK && (mode || !inspectGuideSeen) &&
-      !formEl && !panel.classList.contains("fb-open");
+    var visible = mode && !formEl && !panel.classList.contains("fb-open");
     inspectGuide.hidden = !visible;
-    inspectBtn.classList.toggle("fb-inspect-featured", ALLOW_NEW_FEEDBACK && (visible || mode));
-    if (!visible) {
+    if (visible) {
+      inspectGuide.style.setProperty("--fb-inspect-center", inspectBtn.offsetWidth / 2 + "px");
+      inspectBtn.setAttribute("aria-describedby", "pfb-inspect-help");
+    } else {
       inspectBtn.removeAttribute("aria-describedby");
-      return;
     }
-    var title = mode ? "Select an element" : "Comment on part of this page";
-    var text = mode
-      ? "Click or tap the element, then write your feedback. Press Esc or Inspect again to exit."
-      : "Choose Inspect to comment on a specific element. Use + New for feedback about the whole page.";
-    if (guideTitle.textContent !== title) guideTitle.textContent = title;
-    if (guideText.textContent !== text) guideText.textContent = text;
-    dismissGuide.hidden = mode;
-    inspectBtn.setAttribute("aria-describedby", "pfb-inspect-help");
   }
 
-  function markInspectGuideSeen() {
-    inspectGuideSeen = true;
-    try { sessionStorage.setItem("pfb_inspect_guide_seen", "1"); } catch (e) {}
-  }
-
-  dismissGuide.addEventListener("click", function () {
-    markInspectGuideSeen();
-    updateInspectGuide();
-    inspectBtn.focus();
-  });
   inspectBtn.addEventListener("click", function () {
-    markInspectGuideSeen();
     setMode(!mode);
   });
   newBtn.addEventListener("click", function () {
-    markInspectGuideSeen();
     if (mode) setMode(false);
     openForm({ global: true });
   });
@@ -1899,6 +1873,9 @@
     document.body.classList.toggle("fb-mode", mode);
     inspectBtn.setAttribute("aria-pressed", String(mode));
     inspectBtn.title = mode ? "Exit Inspect mode" : "Pick an element to leave feedback";
+    modeStatusText.textContent = mode ? "ON" : "OFF";
+    modeStatusDot.classList.toggle("fb-off", !mode);
+    modeStatus.title = mode ? "Inspect mode is on" : "Inspect mode is off";
     removeHover();
     removeForm();
     closePanel();
