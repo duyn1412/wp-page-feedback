@@ -513,14 +513,14 @@
 
   /* ---------- styles ---------- */
   var css = "";
-  css += ".fb-dock{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;align-items:center;gap:5px;padding:7px;background:#0a1931f2;color:#fff;border:1px solid #ffffff30;border-radius:16px;box-shadow:0 16px 35px #06172d5c;backdrop-filter:blur(14px);box-sizing:border-box;font:700 12px/1.25 Inter,system-ui,sans-serif;}";
+  css += ".fb-dock{position:fixed;bottom:18px;right:22px;z-index:10000;display:flex;align-items:center;gap:5px;padding:7px;background:#0a1931f2;color:#fff;border:1px solid #ffffff30;border-radius:16px;box-shadow:0 16px 35px #06172d5c;backdrop-filter:blur(14px);box-sizing:border-box;font:700 12px/1.25 Inter,system-ui,sans-serif;}";
   css += ".fb-dock .fb-tool{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:9px 13px;margin:0;border:0;border-radius:10px;background:transparent;color:#d9e5f6;font:inherit;white-space:nowrap;box-shadow:none;}";
   css += ".fb-dock button.fb-tool{cursor:pointer;}.fb-dock button.fb-tool:disabled{opacity:.48;cursor:default;}";
   css += ".fb-dock button.fb-tool:hover:not(:disabled),.fb-dock .fb-toggle,.fb-dock button[aria-pressed=true]{background:#ffffff22;color:#fff;}";
   css += ".fb-dock button:focus-visible{outline:2px solid #a7c7ff;outline-offset:1px;}";
   css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
   css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
-  css += "@media(max-width:560px){.fb-dock{bottom:9px;width:calc(100vw - 20px);justify-content:center;}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
+  css += "@media(max-width:560px){.fb-dock{bottom:9px;right:8px;max-width:calc(100vw - 16px);}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
   css += "@keyframes fbPulseGlow{0%{box-shadow:0 0 0 0 rgba(59,130,246,.6),0 10px 30px rgba(0,0,0,.35)}70%{box-shadow:0 0 0 12px rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}}";
   css += "@keyframes fbGuideBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}";
   css += ".fb-guide-callout{position:fixed;right:1rem;bottom:4.3rem;z-index:10001;display:flex;flex-direction:column;align-items:flex-end;pointer-events:auto;animation:fbGuideBounce 2.5s infinite ease-in-out;}";
