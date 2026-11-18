@@ -572,20 +572,18 @@
   css += ".fb-panel-menu button,.fb-panel-foot button{border:0;background:transparent;color:#334155;padding:6px;font:700 12px/1.4 system-ui;cursor:pointer;white-space:nowrap;}";
   css += ".fb-panel-menu button:disabled{opacity:.55;cursor:default;}.fb-panel-menu button{box-shadow:none;display:block;width:100%;text-align:left;}.fb-panel-menu button:hover{background:#eef4ff;}.fb-panel-menu button[data-fb-clear-all]{color:#b91c1c;}";
   css += ".fb-item{padding:8px 10px;margin-bottom:6px;border:1px solid #e4eaf3;border-radius:14px;background:#fff;}";
-  css += ".fb-item-top,.fb-item-context,.fb-item-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;}";
+  css += ".fb-item-top,.fb-item-context{display:flex;align-items:center;justify-content:space-between;gap:8px;}";
   css += ".fb-item-heading{display:flex;align-items:center;flex-wrap:wrap;gap:5px;}.fb-panel button.fb-image-button{display:inline-flex;align-items:center;gap:4px;min-height:26px;margin:0;padding:2px 6px;border:1px solid #dbe3ed;border-radius:6px;background:#f8fafc;color:#334155;font:700 11px system-ui;box-shadow:none;cursor:pointer;}.fb-image-button svg{width:14px;height:14px;}";
   css += "dialog.fb-image-dialog{box-sizing:border-box;width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:10px;border:1px solid #dbe3ed;border-radius:12px;background:#fff;color:#1e293b;font:600 13px system-ui;overflow:auto;}dialog.fb-image-dialog::backdrop{background:#0f172ad9;}";
   css += ".fb-image-dialog-head,.fb-image-dialog-controls{display:flex;align-items:center;justify-content:space-between;gap:6px;}.fb-image-dialog-controls[hidden]{display:none;}.fb-image-dialog img{display:block;width:100%;max-height:min(72vh,620px);max-height:min(72dvh,620px);margin:8px 0;object-fit:contain;background:#f1f5f9;border-radius:8px;}";
   css += "dialog.fb-image-dialog button{padding:4px 8px;min-height:28px;border:1px solid #dbe3ed;border-radius:7px;background:#fff;color:#334155;font:700 12px system-ui;box-shadow:none;cursor:pointer;}dialog.fb-image-dialog button:disabled{opacity:.45;}dialog.fb-image-dialog button[data-image-remove]{color:#b91c1c;}";
   css += ".fb-edit-toolbar .fb-attach-btn{position:relative;padding:4px 8px;min-height:28px;display:inline-flex;align-items:center;border:1px dashed #cbd5e1;border-radius:7px;background:#f8fafc;color:#334155;font:700 11px system-ui;cursor:pointer;}.fb-edit-toolbar .fb-edit-file{position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-edit-toolbar .fb-attach-btn:focus-within{outline:2px solid #2563eb;}";
-  css += ".fb-item-number,.fb-item-date{color:#64748b;font-size:11px;}";
+  css += ".fb-item-number,.fb-item-date{color:#64748b;font-size:11px;}.fb-item-date{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;}";
   css += ".fb-item .fb-item-note{margin:4px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:#1c2b44;}";
   css += ".fb-item-context{margin:5px 0;padding:4px 7px;border:1px solid #e4e9f2;border-radius:9px;background:#f8fafc;}";
   css += ".fb-item-snippet{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:#475569;font-size:12px;overflow-wrap:anywhere;}";
   css += ".fb-item-context button{flex:none;background:#fff;border:1px solid #dbe3ed;border-radius:7px;color:#334155;padding:5px 8px;font:700 11px system-ui;cursor:pointer;}";
-  css += ".fb-item-meta{align-items:flex-start;flex-wrap:wrap;margin-top:6px;color:#64748b;font-size:11px;}";
-  css += ".fb-item-details summary{cursor:pointer;}.fb-item-details[open]{flex-basis:100%;}.fb-item-details dl{margin:6px 0 0;}.fb-item-details dt{font-weight:700;}.fb-item-details dd{margin:0 0 5px;overflow-wrap:anywhere;}.fb-item-details code{background:transparent;color:inherit;white-space:normal;}";
-  css += ".fb-item-options{position:relative;margin-left:auto;}.fb-item-options summary{display:grid;place-items:center;list-style:none;width:30px;height:28px;border-radius:7px;color:#475569;font-size:20px;cursor:pointer;}.fb-item-options summary::-webkit-details-marker{display:none;}.fb-item-options summary:hover,.fb-item-options[open] summary{background:#f1f5f9;}";
+  css += ".fb-item-options{position:relative;flex:none;}.fb-item-options summary{display:grid;place-items:center;list-style:none;width:30px;height:28px;border-radius:7px;color:#475569;font-size:20px;cursor:pointer;}.fb-item-options summary::-webkit-details-marker{display:none;}.fb-item-options summary:hover,.fb-item-options[open] summary{background:#f1f5f9;}";
   css += ".fb-panel-menu button[data-fb-delete]{color:#b91c1c;}.fb-panel .fb-panel-foot .fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot .fb-savebtn:disabled{opacity:.55;cursor:default;}";
   css += ".fb-located-target{outline:3px solid #2563eb!important;outline-offset:4px!important;}";
   css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
@@ -1417,18 +1415,19 @@
       '<button type="button" data-fb-locate="' + id + '">Locate</button></div>';
   }
 
-  function renderItemDetails(entry) {
-    var fields = [
-      ["CSS selector", entry.selector === "(global)" ? "" : entry.selector],
-      ["IP", entry.ip ? entry.ip + (entry.ip === CURRENT_IP ? " (You)" : "") : ""],
-      ["Viewport", entry.viewport],
-      ["Theme", entry.theme]
-    ].filter(function (field) { return field[1]; });
-    if (!fields.length) return "";
-    return '<details class="fb-item-details"><summary>Technical details</summary><dl>' +
-      fields.map(function (field) {
-        return '<dt>' + field[0] + '</dt><dd><code>' + escapePanelHtml(field[1]) + '</code></dd>';
-      }).join("") + '</dl></details>';
+  var feedbackDateFormat = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    hourCycle: "h23", timeZone: "UTC"
+  });
+
+  function renderFeedbackDate(entry) {
+    var date = new Date(entry.ts || entry.date || NaN);
+    if (isNaN(date.getTime()) && entry.date) date = new Date(entry.date);
+    if (isNaN(date.getTime())) return "";
+    var iso = date.toISOString();
+    var full = iso.slice(0, 19).replace("T", " ") + " UTC";
+    var label = feedbackDateFormat.format(date).replace(", ", " · ") + " UTC";
+    return '<time class="fb-item-date" datetime="' + iso + '" title="' + full + '">' + label + '</time>';
   }
 
   function renderPanelList(allEntries) {
@@ -1470,7 +1469,7 @@
               (imageCount ? '<button type="button" class="fb-image-button" aria-label="View ' + imageCount +
                 (imageCount === 1 ? ' image' : ' images') + '" data-fb-images="' + id + '">' +
                 '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><path d="m3 17 5-5 4 4 4-4 5 5"/></svg>' +
-                imageCount + '</button>' : "") + '</span>' +
+                imageCount + '</button>' : "") + '</span>' + renderFeedbackDate(e) +
               (isCurEditing ? "" : '<details class="fb-item-options"><summary aria-label="Actions for feedback ' + number + '">⋯</summary>' +
               '<div class="fb-panel-menu"><button type="button" data-fb-' + action + '="' +
               id + '">' + actionLabel + '</button><button type="button" data-fb-delete="' + id +
@@ -1535,9 +1534,6 @@
                   String(e.resolution).replace(/</g, "&lt;") +
                   "</div>"
                 : "") +
-              (isCurEditing ? "" : '<div class="fb-item-meta"><span class="fb-item-date">' +
-                escapePanelHtml(e.date || (e.ts ? new Date(e.ts).toLocaleString() : "")) +
-                '</span>' + renderItemDetails(e) + '</div>') +
               "</div>"
             );
           })
