@@ -568,6 +568,7 @@
   css += ".fb-scope{display:inline-block;padding:.1em .5em;border-radius:999px;font:700 9.5px/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;margin-right:.3em;background:#eef2fb;color:#003b95;}";
   css += ".fb-toggle .fb-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.3em;height:1.3em;padding:0 .3em;border-radius:999px;background:#e04545;font-size:11px;}";
   css += "body.fb-mode, body.fb-mode *{cursor:crosshair!important;}";
+  css += "body.fb-mode .fb-panel,body.fb-mode .fb-panel *{cursor:auto!important;}body.fb-mode .fb-panel button,body.fb-mode .fb-panel summary{cursor:pointer!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
   css += ".fb-form{position:absolute;z-index:9999;width:min(320px,90vw);background:#fff;border:1px solid #d5dce8;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding: .85rem;font:400 13px/1.45 system-ui,sans-serif;color:#121826;}";
@@ -581,19 +582,41 @@
   css += ".fb-marker.fb-marker-needs{background:#c99200;}";
   css += ".fb-marker.fb-marker-done{background:#1d8843;border-color:#fff;color:#fff;}";
   css += ".fb-marker.fb-marker-done:hover{background:#157335;box-shadow:0 4px 14px rgba(29,136,67,.5);}";
-  css += ".fb-panel{position:fixed;right:1rem;bottom:3.6rem;z-index:9999;width:min(360px,92vw);max-height:min(60vh,480px);overflow:auto;background:#fff;border:1px solid #d5dce8;border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.3);font:400 13px/1.45 system-ui,sans-serif;color:#121826;display:none;}";
-  css += ".fb-panel.fb-open{display:block;}";
-  css += ".fb-panel-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#fff;border-bottom:1px solid #eef1f6;font-weight:700;}";
-  css += ".fb-panel-head .fb-actions{display:flex;gap:.4rem;}";
-  css += ".fb-panel-head button{padding:.32rem .6rem;border-radius:7px;border:1px solid #d5dce8;background:#fff;font:600 11px system-ui,sans-serif;cursor:pointer;}";
-  css += ".fb-item{padding:.65rem .85rem;border-bottom:1px solid #eef1f6;}";
-  css += ".fb-item .fb-item-sel{font:600 10.5px/1.35 ui-monospace,monospace;color:#5a6578;word-break:break-all;}";
-  css += ".fb-item .fb-item-note{margin:.3rem 0 .35rem;white-space:pre-wrap;}";
-  css += ".fb-item .fb-item-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#8a94a6;}";
-  css += ".fb-item .fb-del{border:0;background:none;color:#e04545;font:600 11px system-ui,sans-serif;cursor:pointer;padding:0;}";
-  css += ".fb-item .fb-edit{border:0;background:none;color:#003b95;font:600 11px system-ui,sans-serif;cursor:pointer;padding:0;}";
+  css += ".fb-panel{position:fixed;top:22px;right:22px;bottom:96px;z-index:9999;width:min(465px,calc(100vw - 28px));overflow:hidden;background:#fff;border:1px solid #e1e8f3;border-radius:20px;box-shadow:0 25px 75px #091b3950;font:400 13px/1.45 Inter,system-ui,sans-serif;color:#1c2b44;display:none;}";
+  css += ".fb-panel.fb-open{display:flex;flex-direction:column;}";
+  css += ".fb-panel *, .fb-panel{box-sizing:border-box;}";
+  css += ".fb-panel-head,.fb-panel-intro,.fb-panel-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 20px;}";
+  css += ".fb-panel-head{padding-top:19px;padding-bottom:4px;}";
+  css += ".fb-panel-heading,.fb-panel-head .fb-actions{display:flex;align-items:center;gap:8px;}";
+  css += ".fb-panel-heading strong{font-size:17px;letter-spacing:-.025em;}";
+  css += ".fb-panel-brand{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#eaf1ff;color:#1d55db;font-size:20px;}";
+  css += ".fb-panel-count{padding:3px 8px;background:#eef2f8;border-radius:8px;font-weight:800;}";
+  css += ".fb-panel button.fb-panel-icon{border:0;background:transparent;color:#576982;border-radius:10px;width:34px;height:34px;padding:0;font:600 18px/1 system-ui;cursor:pointer;}";
+  css += ".fb-panel button.fb-panel-icon:hover{background:#eef4ff;color:#1d4ed8;}";
+  css += ".fb-panel button.fb-add{padding:9px 12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font:700 12px/1.4 system-ui;cursor:pointer;}";
+  css += ".fb-panel-intro small,.fb-panel-foot{color:#64748b;font-size:11px;overflow-wrap:anywhere;}";
+  css += ".fb-panel-segment{display:flex;gap:3px;padding:4px;margin:0 20px 12px;border-radius:12px;background:#f1f5fa;}";
+  css += ".fb-panel-segment button{flex:1;background:transparent;border:0;border-radius:9px;padding:8px 4px;color:#52647d;font:700 12px/1.4 system-ui;cursor:pointer;}";
+  css += ".fb-panel-segment button[aria-pressed=true]{background:#fff;color:#2355af;box-shadow:0 2px 8px #10294d12;}";
+  css += ".fb-panel-filters{display:flex;gap:7px;padding:0 20px 12px;}";
+  css += ".fb-panel-filters select,.fb-panel-filters input{min-width:0;margin:0;height:36px;padding:7px 9px;border:1px solid #e2e8f2;border-radius:9px;background:#fff;color:#40536d;font:400 12px system-ui;}";
+  css += ".fb-panel-filters select{width:43%;}.fb-panel-filters input{flex:1;}";
+  css += ".fb-panel :focus-visible{outline:2px solid #2563eb;outline-offset:2px;}";
+  css += ".fb-panel-list{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:4px 20px 10px;}";
+  css += ".fb-panel-foot{border-top:1px solid #e4e9f2;padding-block:8px;}";
+  css += ".fb-panel-options{position:relative;}.fb-panel-options summary{list-style:none;display:grid;place-items:center;cursor:pointer;width:34px;height:34px;border-radius:10px;color:#576982;font-size:18px;}.fb-panel-options summary::-webkit-details-marker{display:none;}";
+  css += ".fb-panel-menu{position:absolute;z-index:1;top:100%;right:0;min-width:160px;padding:6px;border:1px solid #e4e9f2;border-radius:10px;background:#fff;box-shadow:0 8px 20px #10294d20;}";
+  css += ".fb-panel-menu button,.fb-panel-foot button{border:0;background:transparent;color:#2355af;padding:6px;font:700 12px/1.4 system-ui;cursor:pointer;white-space:nowrap;}";
+  css += ".fb-panel-menu button{display:block;width:100%;text-align:left;}.fb-panel-menu button:hover{background:#eef4ff;}.fb-panel-menu button[data-fb-clear-all]{color:#b91c1c;}";
+  css += ".fb-item{padding:14px;margin-bottom:11px;border:1px solid #e4eaf3;border-radius:14px;background:#fff;}";
+  css += ".fb-item .fb-item-sel{padding:8px;border-radius:8px;background:#f6f9ff;font:600 11px/1.5 ui-monospace,monospace;color:#52647d;overflow-wrap:anywhere;}";
+  css += ".fb-item .fb-item-note{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;}";
+  css += ".fb-item .fb-item-meta{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:#64748b;}";
+  css += ".fb-item .fb-del,.fb-item .fb-edit{border:0;background:none;font:700 11px system-ui,sans-serif;cursor:pointer;padding:0;}";
+  css += ".fb-item .fb-del{color:#b91c1c;}.fb-item .fb-edit{color:#2355af;}";
   css += ".fb-item-actions{display:inline-flex;align-items:center;gap:.65em;}";
-  css += ".fb-panel-head button[data-fb-clear-all]{color:#e04545;border-color:#f3c4c4;}";
+  css += "@media(max-width:560px){.fb-panel{top:8px;right:8px;bottom:76px;width:calc(100vw - 16px);}.fb-panel-head,.fb-panel-intro,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
+  css += "@media(max-height:410px){.fb-panel{top:4px;bottom:56px;overflow:auto;}.fb-panel.fb-open{display:block;}}";
   css += ".fb-item .fb-edit-ta{width:100%;box-sizing:border-box;min-height:60px;margin-top:.3rem;padding:.45rem .55rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
   css += ".fb-empty{padding:1rem .85rem;color:#8a94a6;}";
   css += ".fb-attach{display:flex;flex-direction:column;gap:.4rem;margin-top:.55rem;}";
@@ -618,8 +641,8 @@
   css += ".fb-item .fb-item-img{display:block;max-width:100%;max-height:120px;border-radius:8px;border:1px solid #eef1f6;margin:.15rem 0 .35rem;cursor:zoom-in;}";
   css += ".fb-item .fb-item-file{display:flex;margin:.15rem 0 .35rem;}";
   css += ".fb-status{display:inline-block;padding:.1em .5em;border-radius:999px;font:700 9.5px/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;margin-right:.3em;}";
-  css += ".fb-status-open{background:#fdecec;color:#e04545;}";
-  css += ".fb-status-done{background:#e7f6ec;color:#1d8843;}";
+  css += ".fb-status-open{background:#e6f8ef;color:#087453;}";
+  css += ".fb-status-done{background:#eef1f5;color:#475569;}";
   css += ".fb-status-needs{background:#fff4d6;color:#9a6b00;}";
   css += ".fb-count-done{background:#e7f6ec;color:#1d8843;}";
   css += ".fb-count-needs{background:#fff4d6;color:#9a6b00;}";
@@ -1229,6 +1252,8 @@
 
   var panel = document.createElement("div");
   panel.className = "fb-panel";
+  panel.setAttribute("role", "region");
+  panel.setAttribute("aria-label", "Feedback inspector");
   panel.setAttribute("data-fb-ui", "");
   document.body.appendChild(panel);
 
@@ -1361,6 +1386,8 @@
       /* Click a marker → open the panel with that entry */
       m.addEventListener("click", function (e) {
         e.stopPropagation();
+        panelQuery = "";
+        panelStatus = "";
         openPanel();
         if (isDone) {
           stopEdit();
@@ -1470,56 +1497,78 @@
     return ensureDraftImages().length + ensureDraftFiles().length;
   }
 
+  var panelQuery = "";
+  var panelStatus = "";
+
   function renderPanel() {
     var allEntries = load();
-    var visibleEntries = getFilteredEntries(allEntries);
     var allIps = getAllIps(allEntries);
-    var myCount = allEntries.filter(function (e) { return !e.ip || e.ip === CURRENT_IP; }).length;
-
-    var countLabel = visibleEntries.length + (visibleEntries.length !== allEntries.length ? "/" + allEntries.length : "");
+    var myCount = allEntries.filter(function (entry) {
+      return !entry.ip || entry.ip === CURRENT_IP;
+    }).length;
     var head =
-      '<div class="fb-panel-head"><span>Feedback (' +
-      countLabel +
-      ')<small class="fb-page-slug" title="Server file for this URL"> · ' +
-      PAGE_SLUG +
-      '.json</small></span><span class="fb-actions">' +
-      (!LOGGED_IN
-        ? '<button type="button" data-fb-sync style="background:#2563eb;border-color:#2563eb;color:#fff" title="Login required to save feedback to the server">🔒 Log in to save</button>'
-        : isDirty()
-          ? '<button type="button" data-fb-sync style="background:#1d8843;border-color:#1d8843;color:#fff">Save</button>'
-          : '<button type="button" data-fb-sync>Resave</button>') +
-      (allEntries.length
-        ? '<button type="button" data-fb-clear-all title="Remove all notes on this page">Clear all</button>'
-        : "") +
-      '<button type="button" data-fb-reload>Reload server</button>' +
-      '<button type="button" data-fb-export>Export JSON</button>' +
-      '<button type="button" data-fb-copy>Copy</button>' +
-      '<button type="button" data-fb-close>✕</button>' +
-      "</span></div>";
-
+      '<div class="fb-panel-head"><div class="fb-panel-heading">' +
+      '<span class="fb-panel-brand" aria-hidden="true">▤</span><strong>Feedback</strong>' +
+      '<span class="fb-panel-count" aria-live="polite"></span></div><div class="fb-actions">' +
+      '<button type="button" class="fb-panel-icon" data-fb-export aria-label="Export JSON" title="Export JSON">⇩</button>' +
+      '<details class="fb-panel-options"><summary aria-label="Feedback options" title="Feedback options">⚙</summary>' +
+      '<div class="fb-panel-menu"><button type="button" data-fb-sync>' +
+      (!LOGGED_IN ? "Log in to save" : isDirty() ? "Save to server" : "Resave") +
+      '</button><button type="button" data-fb-reload>Reload server</button>' +
+      '<button type="button" data-fb-copy>Copy JSON</button>' +
+      (allEntries.length ? '<button type="button" data-fb-clear-all>Clear all</button>' : "") +
+      '</div></details><button type="button" class="fb-panel-icon" data-fb-close aria-label="Close feedback" title="Close feedback">×</button></div></div>' +
+      '<div class="fb-panel-intro"><small class="fb-page-slug"></small>' +
+      (ALLOW_NEW_FEEDBACK ? '<button type="button" class="fb-add" data-fb-add>＋ Add feedback</button>' : "") +
+      '</div>';
     var ipBar = "";
-    if (CURRENT_IP || allIps.length) {
-      ipBar = '<div class="fb-ip-bar">' +
-        '<span>IP:</span>' +
-        '<button type="button" class="fb-ip-pill' + (activeIpFilter === "my" ? " fb-ip-active" : "") + '" data-fb-filter-ip="my" title="View only notes from your current IP">' +
-          'My IP' + (CURRENT_IP ? ' (' + CURRENT_IP + ')' : '') + ' <b style="margin-left:3px">' + myCount + '</b>' +
-        '</button>' +
-        '<button type="button" class="fb-ip-pill' + (activeIpFilter === "all" ? " fb-ip-active" : "") + '" data-fb-filter-ip="all" title="View all notes from all IPs">' +
-          'All IPs <b style="margin-left:3px">' + allEntries.length + '</b>' +
-        '</button>';
-      allIps.forEach(function (ip) {
-        if (ip === CURRENT_IP) return;
-        var count = allEntries.filter(function (e) { return e.ip === ip; }).length;
-        ipBar += '<button type="button" class="fb-ip-pill' + (activeIpFilter === ip ? " fb-ip-active" : "") + '" data-fb-filter-ip="' + ip + '" title="Filter by IP: ' + ip + '">' +
-          ip + ' <b style="margin-left:3px">' + count + '</b>' +
-        '</button>';
-      });
-      ipBar += '</div>';
+    if (CURRENT_IP) {
+      ipBar = '<div class="fb-panel-segment" role="group" aria-label="Feedback scope">' +
+        '<button type="button" data-fb-filter-ip="my" aria-pressed="' + (activeIpFilter === "my") + '">My feedback (' + myCount + ')</button>' +
+        '<button type="button" data-fb-filter-ip="all" aria-pressed="' + (activeIpFilter === "all") + '">All feedback (' + allEntries.length + ')</button></div>';
+      var otherIps = allIps.filter(function (ip) { return ip !== CURRENT_IP; });
+      if (otherIps.length) {
+        ipBar += '<div class="fb-ip-bar"><span>IP</span>';
+        otherIps.forEach(function (ip) {
+          var count = allEntries.filter(function (entry) { return entry.ip === ip; }).length;
+          ipBar += '<button type="button" class="fb-ip-pill' + (activeIpFilter === ip ? " fb-ip-active" : "") +
+            '" data-fb-filter-ip="' + ip + '" aria-pressed="' + (activeIpFilter === ip) + '">' + ip + ' (' + count + ')</button>';
+        });
+        ipBar += '</div>';
+      }
     }
+    var list = panel.querySelector(".fb-panel-list");
+    var scrollTop = list ? list.scrollTop : 0;
+    panel.innerHTML = head + ipBar +
+      '<div class="fb-panel-filters"><select aria-label="Filter by status" data-fb-status>' +
+      '<option value="">All statuses</option><option value="open">Open</option>' +
+      '<option value="needs_info">Needs reply</option><option value="done">Resolved</option></select>' +
+      '<input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search></div>' +
+      '<div class="fb-panel-list"></div><div class="fb-panel-foot"><span>' +
+      (!LOGGED_IN ? "Log in to save to server" : isDirty() ? "Unsaved changes" : "Feedback on this page") +
+      '</span><button type="button" data-fb-export>Export JSON</button></div>';
+    panel.querySelector(".fb-page-slug").textContent = PAGE_SLUG + ".json";
+    panel.querySelector("[data-fb-search]").value = panelQuery;
+    panel.querySelector("[data-fb-status]").value = panelStatus;
+    renderPanelList(allEntries);
+    panel.querySelector(".fb-panel-list").scrollTop = scrollTop;
+  }
 
+  function renderPanelList(allEntries) {
+    var query = panelQuery.trim().toLowerCase();
+    var scopedEntries = getFilteredEntries(allEntries);
+    var visibleEntries = scopedEntries.filter(function (entry) {
+      var status = entry.status === "done" || entry.status === "needs_info" ? entry.status : "open";
+      return (!panelStatus || panelStatus === status) &&
+        (!query || [entry.note, entry.selector, entry.question, entry.resolution, entry.ip,
+          entry.scope === "global" ? "General feedback" : ""].some(function (field) {
+          return String(field || "").toLowerCase().indexOf(query) !== -1;
+        }));
+    });
+    var editingEntry = allEntries[editingIndex];
     var body = visibleEntries.length
       ? visibleEntries
-          .map(function (e, i) {
+          .map(function (e) {
             var done = e.status === "done";
             var needs = e.status === "needs_info";
             var statusClass = done
@@ -1527,8 +1576,8 @@
               : needs
                 ? "fb-status-needs"
                 : "fb-status-open";
-            var statusLabel = done ? "✓ Done" : needs ? "? Needs reply" : "Open";
-            var isCurEditing = load()[editingIndex] && load()[editingIndex].id === e.id;
+            var statusLabel = done ? "Resolved" : needs ? "? Needs reply" : "Open";
+            var isCurEditing = editingEntry && editingEntry.id === e.id;
             return (
               '<div class="fb-item' +
               (done ? " fb-done" : "") +
@@ -1552,7 +1601,7 @@
                 ? '<span class="fb-vp" style="font-size:11px;padding:2px 6px;border-radius:4px;background:#eef2f6;color:#334155;margin-right:6px;font-weight:600;">📱 ' + String(e.viewport).replace(/</g, "&lt;") + '</span>'
                 : "") +
               " #" +
-              (i + 1) +
+              (scopedEntries.indexOf(e) + 1) +
               " · " +
               (e.scope === "global" ? "General feedback" : e.selector) +
               "</div>" +
@@ -1675,19 +1724,39 @@
           })
           .join("")
       : allEntries.length
-        ? '<div class="fb-empty">No feedback notes for this filter (' + (activeIpFilter === "my" ? ("My IP: " + CURRENT_IP) : activeIpFilter) + '). Click <b>All IPs</b> above to view all notes.</div>'
+        ? '<div class="fb-empty">No feedback matches the current filters.</div>'
         : ALLOW_NEW_FEEDBACK
-          ? '<div class="fb-empty">No feedback yet. Turn on Feedback mode and click any element.</div>'
+          ? '<div class="fb-empty">No feedback yet. Select Add feedback to create a note.</div>'
           : '<div class="fb-empty">No feedback on this page. Adding new notes is paused.</div>';
-    panel.innerHTML = head + ipBar + body;
+    panel.querySelector(".fb-panel-count").textContent = visibleEntries.length;
+    panel.querySelector(".fb-panel-list").innerHTML = body;
   }
+
+  panel.addEventListener("input", function (event) {
+    if (!event.target.hasAttribute("data-fb-search")) return;
+    captureDraftNote();
+    panelQuery = event.target.value;
+    renderPanelList(load());
+  });
+
+  panel.addEventListener("change", function (event) {
+    if (!event.target.hasAttribute("data-fb-status")) return;
+    captureDraftNote();
+    panelStatus = event.target.value;
+    renderPanelList(load());
+  });
 
   panel.addEventListener("click", function (e) {
     var t = e.target;
+    if (t.hasAttribute("data-fb-add")) {
+      openForm({ global: true });
+      return;
+    }
     var ipBtn = t.closest ? t.closest("[data-fb-filter-ip]") : null;
     if (ipBtn) {
       var targetIp = ipBtn.getAttribute("data-fb-filter-ip");
       if (targetIp) {
+        captureDraftNote();
         activeIpFilter = targetIp;
         try { localStorage.setItem(IP_FILTER_KEY, targetIp); } catch (err) {}
         renderBadge();
@@ -2340,6 +2409,7 @@
         return;
       }
       removeForm();
+      if (panel.classList.contains("fb-open")) renderPanel();
     });
   }
 
