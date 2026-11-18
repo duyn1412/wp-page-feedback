@@ -1012,8 +1012,8 @@
   function updateInspectGuide() {
     var visible = ALLOW_NEW_FEEDBACK && !formEl && !panel.classList.contains("fb-open");
     var message = mode
-      ? "Nhấp chuột phải ở bất kỳ đâu để tắt Feedback."
-      : "Bấm để chọn phần tử và góp ý.";
+      ? "Right-click anywhere to turn off Feedback."
+      : "Click to select an element and leave feedback.";
     if (inspectGuide.textContent !== message) inspectGuide.textContent = message;
     inspectGuide.hidden = !visible;
     if (visible) {
@@ -1932,10 +1932,15 @@
     true
   );
 
-  function positionFeedbackForm(form, target) {
+  function positionFeedbackForm(form, target, pointer) {
     var viewport = window.visualViewport;
     var margin = 10;
     var gap = 8;
+    var offset = null;
+    if (pointer && target) {
+      var initialAnchor = target.getBoundingClientRect();
+      offset = { x: pointer.x - initialAnchor.left, y: pointer.y - initialAnchor.top };
+    }
 
     function place() {
       var x = viewport ? viewport.offsetLeft : 0;
@@ -1960,17 +1965,24 @@
 
       if (target && target.isConnected) {
         var anchor = target.getBoundingClientRect();
-        left = anchor.left;
-        var below = anchor.bottom + gap;
-        var above = anchor.top - gap - box.height;
-        if (below <= maxY) top = below;
-        else if (above >= minY) top = above;
-        else {
-          top = anchor.top;
-          var right = anchor.right + gap;
-          var leftOfTarget = anchor.left - gap - box.width;
-          if (right <= maxX) left = right;
-          else if (leftOfTarget >= minX) left = leftOfTarget;
+        if (offset) {
+          var clickX = anchor.left + offset.x;
+          var clickY = anchor.top + offset.y;
+          left = clickX + gap <= maxX ? clickX + gap : clickX - gap - box.width;
+          top = clickY + gap <= maxY ? clickY + gap : clickY - gap - box.height;
+        } else {
+          left = anchor.left;
+          var below = anchor.bottom + gap;
+          var above = anchor.top - gap - box.height;
+          if (below <= maxY) top = below;
+          else if (above >= minY) top = above;
+          else {
+            top = anchor.top;
+            var right = anchor.right + gap;
+            var leftOfTarget = anchor.left - gap - box.width;
+            if (right <= maxX) left = right;
+            else if (leftOfTarget >= minX) left = leftOfTarget;
+          }
         }
       }
 
@@ -2082,7 +2094,7 @@
       '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
 
     document.body.appendChild(formEl);
-    stopPositioningForm = positionFeedbackForm(formEl, el);
+    stopPositioningForm = positionFeedbackForm(formEl, el, opts.pointer);
     updateInspectGuide();
     var ta = formEl.querySelector("textarea");
     ta.focus({ preventScroll: true });
@@ -2321,7 +2333,7 @@
       if (isUi(el)) return;
       e.preventDefault();
       e.stopPropagation();
-      if (!formEl) openForm({ el: el });
+      if (!formEl) openForm({ el: el, pointer: e.detail > 0 ? { x: e.clientX, y: e.clientY } : null });
     },
     true
   );
