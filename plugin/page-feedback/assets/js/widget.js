@@ -503,8 +503,8 @@
   css += ".fb-inspect-guide{position:absolute;left:-12px;bottom:calc(100% + 12px);width:min(220px,calc(100vw - 24px));box-sizing:border-box;padding:10px 12px;background:#fff;color:#334155;border:1px solid #dbe7fc;border-radius:12px;box-shadow:0 8px 28px #10294d28;font:400 12px/1.45 system-ui,sans-serif;}";
   css += ".fb-inspect-guide[hidden]{display:none;}.fb-inspect-guide strong{display:block;margin-bottom:2px;color:#1e293b;font-size:13px;}";
   css += ".fb-inspect-guide::after{content:'';position:absolute;top:100%;left:calc(12px + var(--fb-inspect-center,34px));transform:translateX(-50%);border:6px solid transparent;border-top-color:#fff;}";
-  css += "@keyframes fbInspectGlow{0%,100%{box-shadow:0 0 0 0 transparent;}50%{box-shadow:0 0 0 4px #6da3ff80,0 0 12px #3b82f69c;}}";
-  css += "@media(prefers-reduced-motion:no-preference){.fb-dock [data-fb-inspect]:not(:disabled){animation:fbInspectGlow .85s ease-in-out 2;}}";
+  css += "@keyframes fbInspectGlow{0%,65%,100%{box-shadow:0 0 0 0 transparent;}32%{box-shadow:0 0 0 3px #6da3ff70,0 0 10px #3b82f667;}}";
+  css += "@media(prefers-reduced-motion:no-preference){.fb-dock [data-fb-inspect].fb-inspect-prompt:not(:disabled){animation:fbInspectGlow 2s ease-in-out infinite;}}";
   css += ".fb-unsaved-banner{position:fixed;bottom:4.6rem;right:1rem;z-index:10002;max-width:min(440px,92vw);background:#0f172a;color:#f8fafc;border:1px solid #f59e0b;border-radius:12px;padding:.85rem 1.1rem;box-shadow:0 16px 40px rgba(0,0,0,.45);display:flex;align-items:center;gap:12px;font:500 12.5px/1.45 system-ui,-apple-system,sans-serif;animation:fbSlideDown .25s ease-out;}";
   css += ".fb-unsaved-icon{font-size:22px;flex-shrink:0;}";
   css += ".fb-unsaved-body{flex:1;}";
@@ -536,11 +536,13 @@
   css += ".fb-form .fb-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.6rem;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
   css += ".fb-form button.fb-save{background:#e04545;border-color:#e04545;color:#fff;}";
-  css += ".fb-marker{position:fixed;z-index:9998;width:28px;height:28px;border-radius:999px;background:#e04545;color:#fff;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);font:700 13px/24px system-ui,sans-serif;text-align:center;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}";
+  css += ".fb-marker{position:fixed;z-index:9998;width:28px;height:28px;border-radius:999px;--fb-marker-color:#e04545;background:var(--fb-marker-color);color:#fff;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);font:700 13px/24px system-ui,sans-serif;text-align:center;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}";
   css += ".fb-marker:hover{transform:scale(1.15);box-shadow:0 4px 14px rgba(0,0,0,.4);}";
-  css += ".fb-marker.fb-marker-needs{background:#c99200;}";
-  css += ".fb-marker.fb-marker-done{background:#1d8843;border-color:#fff;color:#fff;}";
+  css += ".fb-marker.fb-marker-needs{--fb-marker-color:#c99200;}";
+  css += ".fb-marker.fb-marker-done{--fb-marker-color:#1d8843;border-color:#fff;color:#fff;}";
   css += ".fb-marker.fb-marker-done:hover{background:#157335;box-shadow:0 4px 14px rgba(29,136,67,.5);}";
+  css += "@keyframes fbMarkerPulse{0%{transform:scale(1);opacity:.5;}65%,100%{transform:scale(1.32);opacity:0;}}";
+  css += "@media(prefers-reduced-motion:no-preference){.fb-marker::after{content:'';position:absolute;inset:-2px;border:1px solid var(--fb-marker-color);border-radius:inherit;pointer-events:none;opacity:0;animation:fbMarkerPulse 1.5s ease-out 2;}}";
   css += ".fb-panel{position:fixed;right:22px;bottom:86px;max-height:min(520px,70vh);max-height:min(520px,70dvh);z-index:9999;width:min(465px,calc(100vw - 28px));overflow:hidden;background:#fff;border:1px solid #e1e8f3;border-radius:20px;box-shadow:0 25px 75px #091b3950;font:400 13px/1.45 Inter,system-ui,sans-serif;color:#1c2b44;display:none;}";
   css += ".fb-panel.fb-open{display:flex;flex-direction:column;}";
   css += ".fb-panel *, .fb-panel{box-sizing:border-box;}";
@@ -999,6 +1001,11 @@
   var newBtn = dock.querySelector("[data-fb-new]");
   inspectBtn.disabled = !ALLOW_NEW_FEEDBACK;
   newBtn.disabled = !ALLOW_NEW_FEEDBACK;
+  if (ALLOW_NEW_FEEDBACK) {
+    var usedInspect = false;
+    try { usedInspect = sessionStorage.getItem("pfb_inspect_activated") === "1"; } catch (e) {}
+    inspectBtn.classList.toggle("fb-inspect-prompt", !usedInspect);
+  }
 
   var inspectGuide = dock.querySelector(".fb-inspect-guide");
   var modeStatus = dock.querySelector("[data-fb-mode-status]");
@@ -1870,6 +1877,10 @@
   /* ---------- feedback mode ---------- */
   function setMode(on) {
     mode = !!on && ALLOW_NEW_FEEDBACK;
+    if (mode && inspectBtn.classList.contains("fb-inspect-prompt")) {
+      inspectBtn.classList.remove("fb-inspect-prompt");
+      try { sessionStorage.setItem("pfb_inspect_activated", "1"); } catch (e) {}
+    }
     document.body.classList.toggle("fb-mode", mode);
     inspectBtn.setAttribute("aria-pressed", String(mode));
     inspectBtn.title = mode ? "Exit Inspect mode" : "Pick an element to leave feedback";
