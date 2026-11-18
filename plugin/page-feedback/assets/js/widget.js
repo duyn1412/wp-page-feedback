@@ -580,8 +580,8 @@
   css += ".fb-edit-toolbar .fb-attach-btn{position:relative;padding:4px 8px;min-height:28px;display:inline-flex;align-items:center;border:1px dashed #cbd5e1;border-radius:7px;background:#f8fafc;color:#334155;font:700 14px system-ui;cursor:pointer;}.fb-edit-toolbar .fb-edit-file{position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-edit-toolbar .fb-attach-btn:focus-within{outline:2px solid #2563eb;}";
   css += ".fb-item-number,.fb-item-date{color:#64748b;font-size:14px;}.fb-item-date{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;}";
   css += ".fb-item .fb-item-note{margin:4px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:#1c2b44;}";
-  css += ".fb-item-options{position:relative;flex:none;}.fb-item-options summary{display:grid;place-items:center;list-style:none;width:30px;height:28px;border-radius:7px;color:#475569;font-size:20px;cursor:pointer;}.fb-item-options summary::-webkit-details-marker{display:none;}.fb-item-options summary:hover,.fb-item-options[open] summary{background:#f1f5f9;}";
-  css += ".fb-panel-menu button[data-fb-delete]{color:#b91c1c;}.fb-panel .fb-panel-foot .fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot .fb-savebtn:disabled{opacity:.55;cursor:default;}";
+  css += ".fb-item-actions{flex:none;display:flex;gap:3px;}.fb-panel .fb-item-actions button{display:grid;place-items:center;width:28px;height:28px;margin:0;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:#475569;box-shadow:none;cursor:pointer;}.fb-panel .fb-item-actions button:hover{background:#f1f5f9;color:#1e293b;}.fb-panel .fb-item-actions button[data-fb-delete]{color:#b91c1c;}.fb-panel .fb-item-actions button[data-fb-delete]:hover{background:#fef2f2;color:#991b1b;}.fb-item-actions svg{width:16px;height:16px;}";
+  css += ".fb-panel .fb-panel-foot .fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot .fb-savebtn:disabled{opacity:.55;cursor:default;}";
   css += ".fb-located-target{outline:3px solid #2563eb!important;outline-offset:4px!important;}";
   css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
   css += "@media(max-height:430px){.fb-panel{max-height:calc(100vh - 94px);max-height:calc(100dvh - 94px);overflow:auto;overscroll-behavior:contain;}.fb-panel-list{flex:none;overflow:visible;}}";
@@ -1426,6 +1426,20 @@
     return '<time class="fb-item-date" datetime="' + iso + '" title="' + full + '">' + label + '</time>';
   }
 
+  var feedbackActionIcons = {
+    edit: '<path d="m14 5 5 5M5 19l4-.8L19 8a2.1 2.1 0 0 0-3-3L6 15z"/>',
+    reply: '<path d="m10 8-5 5 5 5m-5-5h10a4 4 0 0 0 4-4V6"/>',
+    reopen: '<path d="M5 11a7 7 0 1 1 2 6m-2-11v5h5"/>',
+    delete: '<path d="M4 7h16m-10 0V4h4v3m4 0-1 13H7L6 7m4 4v5m4-5v5"/>'
+  };
+
+  function renderFeedbackAction(action, label, id) {
+    return '<button type="button" data-fb-' + action + '="' + id +
+      '" aria-label="' + label + '" title="' + label + '">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      feedbackActionIcons[action] + '</svg></button>';
+  }
+
   function renderPanelList(allEntries) {
     var query = panelQuery.trim().toLowerCase();
     var scopedEntries = getFilteredEntries(allEntries);
@@ -1466,10 +1480,9 @@
                 (imageCount === 1 ? ' image' : ' images') + '" data-fb-images="' + id + '">' +
                 '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><path d="m3 17 5-5 4 4 4-4 5 5"/></svg>' +
                 imageCount + '</button>' : "") + renderLocateButton(e, id) + '</span>' + renderFeedbackDate(e) +
-              (isCurEditing ? "" : '<details class="fb-item-options"><summary aria-label="Actions for feedback ' + number + '">⋯</summary>' +
-              '<div class="fb-panel-menu"><button type="button" data-fb-' + action + '="' +
-              id + '">' + actionLabel + '</button><button type="button" data-fb-delete="' + id +
-              '">Delete</button></div></details>') + "</div>" +
+              (isCurEditing ? "" : '<div class="fb-item-actions">' +
+                renderFeedbackAction(action, actionLabel, id) + renderFeedbackAction("delete", "Delete", id) +
+                '</div>') + "</div>" +
               (isCurEditing
                 ? (function () {
                     var noteVal =
@@ -1641,7 +1654,7 @@
   }
 
   panel.addEventListener("click", function (e) {
-    var t = e.target;
+    var t = e.target.closest(".fb-item-actions button") || e.target;
     var locate = t.closest("[data-fb-locate]");
     if (locate) {
       var entry = load()[findEntryIndex(locate.getAttribute("data-fb-locate"))];
