@@ -1591,9 +1591,22 @@
       controls.hidden = images.length === 1 && !editable;
     }
 
+    function isBackdrop(event) {
+      if (event.target !== dialog) return false;
+      var box = dialog.getBoundingClientRect();
+      return event.clientX < box.left || event.clientX >= box.right ||
+        event.clientY < box.top || event.clientY >= box.bottom;
+    }
+
+    var pressedBackdrop = false;
+    dialog.addEventListener("pointerdown", function (event) {
+      pressedBackdrop = isBackdrop(event);
+    });
     dialog.addEventListener("click", function (event) {
       var clicked = event.target;
-      if (clicked.hasAttribute("data-image-close")) dialog.close();
+      var closeFromBackdrop = pressedBackdrop && isBackdrop(event);
+      pressedBackdrop = false;
+      if (clicked.hasAttribute("data-image-close") || closeFromBackdrop) dialog.close();
       else if (clicked === prev && index > 0) {
         index -= 1;
         showImage();
