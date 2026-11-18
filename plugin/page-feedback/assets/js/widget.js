@@ -987,8 +987,6 @@
   }
 
   dock.innerHTML =
-    '<span class="fb-tool"><span class="fb-tool-symbol" aria-hidden="true">♙</span>Customer</span>' +
-    '<span class="fb-tool-divider" aria-hidden="true"></span>' +
     '<div class="fb-inspect-tool"><button type="button" class="fb-tool" data-fb-inspect aria-pressed="false" title="Pick an element to leave feedback"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
     '<div class="fb-inspect-guide" id="pfb-inspect-help" role="status" hidden><strong>Select an element</strong><span>Click or tap an element to add feedback. Press Esc or Inspect again to exit.</span></div></div>' +
     '<button type="button" class="fb-tool" data-fb-new aria-label="New feedback" title="New feedback"><span class="fb-tool-symbol" aria-hidden="true">＋</span><span class="fb-tool-new">New</span></button>' +
