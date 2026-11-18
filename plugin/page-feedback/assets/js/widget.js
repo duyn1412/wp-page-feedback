@@ -526,15 +526,16 @@
   css += ".fb-toast.fb-show{opacity:1;}";
   css += ".fb-toast.fb-ok{background:#1d8843;}";
   css += ".fb-toast.fb-err{background:#e04545;}";
-  css += ".fb-form-global{position:fixed;top:18vh;left:50%;transform:translateX(-50%);width:min(400px,92vw);}";
+  css += ".fb-form.fb-form-global{width:400px;}";
   css += "body.fb-mode, body.fb-mode *{cursor:crosshair!important;}";
   css += "body.fb-mode .fb-panel,body.fb-mode .fb-panel *{cursor:auto!important;}body.fb-mode .fb-panel button,body.fb-mode .fb-panel summary,body.fb-mode .fb-dock button,body.fb-mode .fb-form button{cursor:pointer!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
-  css += ".fb-form{position:absolute;z-index:9999;width:min(320px,90vw);background:#fff;border:1px solid #d5dce8;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding: .85rem;font:400 13px/1.45 system-ui,sans-serif;color:#121826;}";
+  css += ".fb-form{position:fixed;z-index:9999;box-sizing:border-box;display:flex;flex-direction:column;width:320px;background:#fff;border:1px solid #d5dce8;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding: .85rem;font:400 13px/1.45 system-ui,sans-serif;color:#121826;}";
   css += ".fb-form .fb-sel{font:600 11px/1.3 ui-monospace,monospace;color:#5a6578;word-break:break-all;margin:0 0 .5rem;}";
   css += ".fb-form textarea{width:100%;box-sizing:border-box;min-height:70px;padding:.5rem .6rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
-  css += ".fb-form .fb-row{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.6rem;}";
+  css += ".fb-form-content{min-height:0;overflow:auto;overscroll-behavior:contain;}.fb-form-header{flex:none;}";
+  css += ".fb-form .fb-row{flex:none;display:flex;gap:.5rem;justify-content:flex-end;margin-top:.6rem;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
   css += ".fb-form[data-fb-ui] .fb-row>button{appearance:none;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:36px;margin:0;padding:7px 13px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:700 12px/1.3 system-ui,sans-serif;letter-spacing:normal;text-transform:none;box-shadow:none;}";
   css += ".fb-form[data-fb-ui] .fb-row>button.fb-cancel:hover{background:#f1f5f9;color:#1e293b;}";
@@ -929,6 +930,7 @@
   var mode = false;
   var hoverBox = null;
   var formEl = null;
+  var stopPositioningForm = null;
   var markers = [];
   var loginWarningBannerEl = null;
 
@@ -1926,7 +1928,77 @@
     true
   );
 
+  function positionFeedbackForm(form, target) {
+    var viewport = window.visualViewport;
+    var margin = 10;
+    var gap = 8;
+
+    function place() {
+      var x = viewport ? viewport.offsetLeft : 0;
+      var y = viewport ? viewport.offsetTop : 0;
+      var width = viewport ? viewport.width : window.innerWidth;
+      var height = viewport ? viewport.height : window.innerHeight;
+      var minX = x + margin;
+      var minY = y + margin;
+      var bottom = y + height - margin;
+      var toolbar = dock.getBoundingClientRect();
+      if (toolbar.top > minY && toolbar.top < bottom && toolbar.bottom <= y + height) {
+        bottom = toolbar.top - gap;
+      }
+
+      form.style.maxWidth = Math.max(0, width - 2 * margin) + "px";
+      form.style.maxHeight = Math.max(0, bottom - minY) + "px";
+      var box = form.getBoundingClientRect();
+      var maxX = x + width - margin - box.width;
+      var maxY = bottom - box.height;
+      var left = x + (width - box.width) / 2;
+      var top = minY + Math.max(0, (maxY - minY) / 3);
+
+      if (target && target.isConnected) {
+        var anchor = target.getBoundingClientRect();
+        left = anchor.left;
+        var below = anchor.bottom + gap;
+        var above = anchor.top - gap - box.height;
+        if (below <= maxY) top = below;
+        else if (above >= minY) top = above;
+        else {
+          top = anchor.top;
+          var right = anchor.right + gap;
+          var leftOfTarget = anchor.left - gap - box.width;
+          if (right <= maxX) left = right;
+          else if (leftOfTarget >= minX) left = leftOfTarget;
+        }
+      }
+
+      form.style.left = Math.max(minX, Math.min(left, maxX)) + "px";
+      form.style.top = Math.max(minY, Math.min(top, maxY)) + "px";
+    }
+
+    place();
+    var observer = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null;
+    if (observer) observer.observe(form);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, { passive: true });
+    if (viewport) {
+      viewport.addEventListener("resize", place);
+      viewport.addEventListener("scroll", place);
+    }
+    return function () {
+      if (observer) observer.disconnect();
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place);
+      if (viewport) {
+        viewport.removeEventListener("resize", place);
+        viewport.removeEventListener("scroll", place);
+      }
+    };
+  }
+
   function removeForm() {
+    if (stopPositioningForm) {
+      stopPositioningForm();
+      stopPositioningForm = null;
+    }
     if (formEl) {
       formEl.remove();
       formEl = null;
@@ -1971,7 +2043,7 @@
     formEl.setAttribute("data-fb-ui", "");
     var currentVp = window.innerWidth + "×" + window.innerHeight;
     formEl.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.45rem;">' +
+      '<div class="fb-form-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.45rem;">' +
       '<p class="fb-sel" style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' +
       (isGlobal ? "🌐 General feedback for this page" : selector) +
       "</p>" +
@@ -1979,7 +2051,7 @@
       currentVp +
       "</span>" +
       "</div>" +
-      '<textarea placeholder="' +
+      '<div class="fb-form-content"><textarea placeholder="' +
       (isGlobal
         ? "Overall comments about this page (layout, colors, general feel…)"
         : "Comment on this element…") +
@@ -2002,23 +2074,14 @@
       "</div>" +
       '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
       "</div>" +
-      '<div class="fb-previews"></div>' +
+      '<div class="fb-previews"></div></div>' +
       '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
 
-    if (el) {
-      var rect = el.getBoundingClientRect();
-      var top = window.scrollY + rect.bottom + 8;
-      var left = Math.min(
-        window.scrollX + rect.left,
-        window.scrollX + window.innerWidth - 340
-      );
-      formEl.style.top = top + "px";
-      formEl.style.left = Math.max(8, left) + "px";
-    }
     document.body.appendChild(formEl);
+    stopPositioningForm = positionFeedbackForm(formEl, el);
     updateInspectGuide();
     var ta = formEl.querySelector("textarea");
-    ta.focus();
+    ta.focus({ preventScroll: true });
 
     var attachedImages = [];
     var attachedFiles = [];
