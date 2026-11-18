@@ -142,6 +142,8 @@
       if (e && e.id) sentIds[String(e.id)] = true;
     });
     var deletedIds = loadDeleted();
+    var savedNotes = localStorage.getItem(STORAGE_KEY);
+    var savedDeletes = localStorage.getItem(DELETED_KEY);
 
     var headers = { "Content-Type": "application/json" };
     if (REST_NONCE) headers["X-WP-Nonce"] = REST_NONCE;
@@ -167,10 +169,6 @@
         if (!res || res.ok !== true || !Array.isArray(res.entries)) {
           throw new Error("Server did not confirm save (invalid response).");
         }
-        /* Persist merged server list locally */
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(res.entries));
-        clearDeletedQueue();
-
         /* Validate by re-fetching the JSON file from disk/CDN */
         if (!FILE_URL) {
           return { res: res, verified: false };
@@ -230,12 +228,20 @@
           });
       })
       .then(function (info) {
+        var newerDraft = localStorage.getItem(STORAGE_KEY) !== savedNotes ||
+          localStorage.getItem(DELETED_KEY) !== savedDeletes;
+        if (!newerDraft) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(info.res.entries));
+          clearDeletedQueue();
+          clearDirty();
+        }
         log("sync ok", info.file || (info.res && info.res.file), (info.res.entries || []).length + " entries", "verified=" + !!info.verified);
         onDone &&
           onDone(true, {
             count: (info.res.entries || []).length,
             file: info.file || (info.res && info.res.file) || ("feedback/" + PAGE_SLUG + ".json"),
             verified: !!info.verified,
+            newerDraft: newerDraft,
             fileCount: info.fileCount,
           });
       })
@@ -314,18 +320,6 @@
   }
 
   /* Empty dirty draft blocks the server pull — heal it (common stuck state). */
-  function healEmptyDirty() {
-    if (isDirty() && load().length === 0) {
-      log("heal: clearing empty dirty draft so server feedback can load");
-      clearDirty();
-      try {
-        localStorage.setItem(STORAGE_KEY, "[]");
-      } catch (e) {}
-      return true;
-    }
-    return false;
-  }
-
   /* Merge server list with local drafts: server first, local ids override,
      then append local-only new notes. Never drop server entries. */
   function mergeFeedbackLists(serverEntries, localEntries) {
@@ -369,17 +363,12 @@
     });
   }
 
-  /* On page load: always pull the server JSON. If local has unsaved drafts,
-     merge them on top (empty dirty drafts are cleared first). */
   function pullFromServer(cb) {
-    if (!FILE_URL || location.protocol === "file:") {
-      log("pull skipped", { fileUrl: FILE_URL, page: PAGE_SLUG });
-      cb();
+    if (!FILE_URL || location.protocol === "file:" || saving) {
+      cb(false);
       return;
     }
-    healEmptyDirty();
-    var dirty = isDirty();
-    var localSnapshot = dirty ? load().slice() : [];
+    var generation = syncGeneration;
 
     var pullHeaders = { Accept: "application/json" };
     if (REST_NONCE) pullHeaders["X-WP-Nonce"] = REST_NONCE;
@@ -406,35 +395,24 @@
         });
       })
       .then(function (serverEntries) {
-        if (serverEntries == null) {
-          log("pull skipped apply (no valid JSON)", { page: PAGE_SLUG, fileUrl: FILE_URL });
-          cb();
+        if (serverEntries == null || generation !== syncGeneration) {
+          cb(false);
           return;
         }
-        if (dirty && localSnapshot.length) {
-          var merged = mergeFeedbackLists(serverEntries, localSnapshot);
-          log("pulled+merged", {
-            page: PAGE_SLUG,
-            server: serverEntries.length,
-            local: localSnapshot.length,
-            merged: merged.length,
-          });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-          /* keep dirty so client still clicks Save/Resave for local-only notes */
-        } else {
-          log("pulled from server", PAGE_SLUG, serverEntries.length + " entries");
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(serverEntries));
-          if (dirty) clearDirty();
-        }
-        cb();
+        var local = isDirty() ? load() : [];
+        var hasDraft = local.length > 0 || loadDeleted().length > 0;
+        var next = hasDraft ? mergeFeedbackLists(serverEntries, local) : serverEntries;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        if (!hasDraft) clearDirty();
+        cb(true);
       })
       .catch(function (err) {
-        log("pull failed", PAGE_SLUG, err);
-        cb();
+        log("pull failed", err);
+        cb(false);
       });
   }
 
-  /* ---------- selector generation ---------- */
+
   function cssPath(el) {
     if (el.id) return "#" + CSS.escape(el.id);
     var path = [];
@@ -521,14 +499,10 @@
   css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
   css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
   css += "@media(max-width:560px){.fb-dock{bottom:9px;right:8px;max-width:calc(100vw - 16px);}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
-  css += "@keyframes fbPulseGlow{0%{box-shadow:0 0 0 0 rgba(59,130,246,.6),0 10px 30px rgba(0,0,0,.35)}70%{box-shadow:0 0 0 12px rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}}";
-  css += "@keyframes fbGuideBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}";
-  css += ".fb-guide-callout{position:fixed;right:1rem;bottom:4.3rem;z-index:10001;display:flex;flex-direction:column;align-items:flex-end;pointer-events:auto;animation:fbGuideBounce 2.5s infinite ease-in-out;}";
-  css += ".fb-guide-bubble{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;padding:.6rem .85rem;border-radius:10px;font:600 12.5px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 12px 32px rgba(37,99,235,.45);display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap;user-select:none;}";
-  css += ".fb-guide-bubble:hover{background:linear-gradient(135deg,#1d4ed8 0%,#1d4ed8 100%);}";
-  css += ".fb-guide-close{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;margin-left:2px;cursor:pointer;}";
-  css += ".fb-guide-close:hover{background:rgba(255,255,255,.35);}";
-  css += ".fb-guide-pointer{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid #2563eb;margin-right:48px;}";
+  css += ".fb-dock .fb-inspect-featured{background:#2563eb;color:#fff;}.fb-dock button.fb-inspect-featured:hover:not(:disabled){background:#1d4ed8;color:#fff;}";
+  css += ".fb-inspect-guide{position:absolute;right:0;bottom:calc(100% + 9px);display:flex;align-items:flex-start;gap:8px;width:min(280px,calc(100vw - 20px));box-sizing:border-box;padding:10px 12px;background:#fff;color:#334155;border:1px solid #dbe7fc;border-radius:12px;box-shadow:0 8px 28px #10294d28;font:400 12px/1.45 system-ui,sans-serif;}";
+  css += ".fb-inspect-guide[hidden],.fb-inspect-guide button[hidden]{display:none;}.fb-inspect-guide strong{display:block;margin-bottom:2px;color:#1e293b;font-size:13px;}";
+  css += ".fb-inspect-guide button{display:grid;place-items:center;flex:none;margin-left:auto;width:28px;height:28px;padding:0;border:0;border-radius:7px;background:#eef2f7;color:#334155;font:700 16px/1 system-ui;cursor:pointer;}";
   css += ".fb-unsaved-banner{position:fixed;bottom:4.6rem;right:1rem;z-index:10002;max-width:min(440px,92vw);background:#0f172a;color:#f8fafc;border:1px solid #f59e0b;border-radius:12px;padding:.85rem 1.1rem;box-shadow:0 16px 40px rgba(0,0,0,.45);display:flex;align-items:center;gap:12px;font:500 12.5px/1.45 system-ui,-apple-system,sans-serif;animation:fbSlideDown .25s ease-out;}";
   css += ".fb-unsaved-icon{font-size:22px;flex-shrink:0;}";
   css += ".fb-unsaved-body{flex:1;}";
@@ -537,15 +511,7 @@
   css += ".fb-unsaved-btn:hover{background:#d97706;}";
   css += ".fb-unsaved-close{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:0;background:rgba(255,255,255,.1);color:#94a3b8;border-radius:50%;font-size:11px;cursor:pointer;flex-shrink:0;}";
   css += ".fb-unsaved-close:hover{color:#fff;background:rgba(255,255,255,.2);}";
-  css += ".fb-mode-hint{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);z-index:10002;display:flex;align-items:center;gap:8px;padding:.55rem 1.15rem;border-radius:999px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.18);font:600 13px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 12px 36px rgba(0,0,0,.35);pointer-events:auto;cursor:pointer;animation:fbSlideDown .25s ease-out;white-space:nowrap;}";
-  css += ".fb-mode-hint:hover{background:#1e293b;}";
-  css += ".fb-mode-hint .fb-hint-badge{display:inline-block;padding:2px 8px;border-radius:6px;background:#16a34a;color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}";
-  css += ".fb-mode-hint .fb-hint-text{color:#f1f5f9;}";
-  css += ".fb-mode-hint .fb-hint-kbd{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.18);color:#fbbf24;font:600 11.5px ui-monospace,monospace;}";
-  css += ".fb-mode-hint .fb-hint-close{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:11px;margin-left:4px;}";
   css += "@keyframes fbSlideDown{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}";
-  css += ".fb-form-tip{margin:.6rem 0 0;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font:500 11.5px/1.4 system-ui,sans-serif;color:#475569;display:flex;align-items:center;gap:6px;}";
-  css += ".fb-form-tip b{color:#0f172a;}";
   css += ".fb-savebtn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border:0;border-radius:999px;background:#9aa4b2;color:#fff;font:600 13px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.2);}";
   css += ".fb-savebtn.fb-dirty{background:#1d8843;}";
   css += ".fb-savebtn.fb-ok{background:#1d8843;}";
@@ -557,11 +523,9 @@
   css += ".fb-toast.fb-show{opacity:1;}";
   css += ".fb-toast.fb-ok{background:#1d8843;}";
   css += ".fb-toast.fb-err{background:#e04545;}";
-  css += ".fb-frozen{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border-radius:999px;background:#fff8e8;border:1px solid #f0d78a;color:#6b4e00;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:min(280px,70vw);}";
   css += ".fb-form-global{position:fixed;top:18vh;left:50%;transform:translateX(-50%);width:min(400px,92vw);}";
-  css += ".fb-scope{display:inline-block;padding:.1em .5em;border-radius:999px;font:700 9.5px/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;margin-right:.3em;background:#eef2fb;color:#003b95;}";
   css += "body.fb-mode, body.fb-mode *{cursor:crosshair!important;}";
-  css += "body.fb-mode .fb-panel,body.fb-mode .fb-panel *{cursor:auto!important;}body.fb-mode .fb-panel button,body.fb-mode .fb-panel summary{cursor:pointer!important;}";
+  css += "body.fb-mode .fb-panel,body.fb-mode .fb-panel *{cursor:auto!important;}body.fb-mode .fb-panel button,body.fb-mode .fb-panel summary,body.fb-mode .fb-dock button,body.fb-mode .fb-form button{cursor:pointer!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
   css += ".fb-form{position:absolute;z-index:9999;width:min(320px,90vw);background:#fff;border:1px solid #d5dce8;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding: .85rem;font:400 13px/1.45 system-ui,sans-serif;color:#121826;}";
@@ -643,8 +607,6 @@
   css += ".fb-status-open{background:#e6f8ef;color:#087453;}";
   css += ".fb-status-done{background:#eef1f5;color:#475569;}";
   css += ".fb-status-needs{background:#fff4d6;color:#9a6b00;}";
-  css += ".fb-count-done{background:#e7f6ec;color:#1d8843;}";
-  css += ".fb-count-needs{background:#fff4d6;color:#9a6b00;}";
   css += ".fb-page-slug{font-weight:500;color:#6b7280;font-size:11px;}";
   css += ".fb-item.fb-done .fb-item-note{color:#8a94a6;}";
   css += ".fb-item.fb-needs{background:#fffbeb;}";
@@ -658,7 +620,6 @@
   css += ".fb-ip-pill{display:inline-flex;align-items:center;gap:3px;padding:.2rem .55rem;border-radius:999px;border:1px solid #d5dce8;background:#fff;font:600 11px system-ui,sans-serif;color:#475569;cursor:pointer;white-space:nowrap;transition:all .15s;}";
   css += ".fb-ip-pill:hover{border-color:#94a3b8;color:#0f172a;}";
   css += ".fb-ip-pill.fb-ip-active{background:#e2e8f0;border-color:#cbd5e1;color:#1e293b;}";
-  css += ".fb-item-ip.fb-is-you{background:#e0f2fe;color:#0369a1;}";
   css += "@keyframes fb-spin{to{transform:rotate(360deg)}}";
   css += "@keyframes fb-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}";
   css += ".fb-preview-loading{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-top:.55rem;border-radius:8px;border:1px dashed #cbd5e1;background:linear-gradient(90deg,#f8fafc 0%,#edf2f7 50%,#f8fafc 100%);background-size:200% 100%;animation:fb-shimmer 2s infinite ease-in-out;box-sizing:border-box;}";
@@ -963,70 +924,7 @@
   var hoverBox = null;
   var formEl = null;
   var markers = [];
-  var modeHintEl = null;
-  var guideCalloutEl = null;
   var loginWarningBannerEl = null;
-
-  function updateModeHint(on) {
-    if (on) {
-      if (!modeHintEl) {
-        modeHintEl = document.createElement("div");
-        modeHintEl.className = "fb-mode-hint";
-        modeHintEl.setAttribute("data-fb-ui", "");
-        modeHintEl.title = "Right-click anywhere or click here to exit Feedback Mode";
-        modeHintEl.innerHTML =
-          '<span class="fb-hint-badge">Feedback Mode: ON</span>' +
-          '<span class="fb-hint-text">💡 <b>Tip:</b> Click any element to comment · Right-click <span class="fb-hint-kbd">🖱️</span> anywhere to exit</span>' +
-          '<span class="fb-hint-close" title="Dismiss">✕</span>';
-        modeHintEl.addEventListener("click", function (e) {
-          e.stopPropagation();
-          setMode(false);
-        });
-        document.body.appendChild(modeHintEl);
-      }
-    } else {
-      if (modeHintEl) {
-        modeHintEl.remove();
-        modeHintEl = null;
-      }
-    }
-  }
-
-  function renderGuideCallout() {
-    if (mode) return;
-    if (guideCalloutEl) return;
-    try {
-      if (sessionStorage.getItem("pfb_guide_dismissed") === "1") return;
-    } catch (e) {}
-
-    guideCalloutEl = document.createElement("div");
-    guideCalloutEl.className = "fb-guide-callout";
-    guideCalloutEl.setAttribute("data-fb-ui", "");
-    guideCalloutEl.innerHTML =
-      '<div class="fb-guide-bubble">' +
-        '<span style="font-size:15px">👆</span>' +
-        '<span><b>Choose Inspect to select an element</b></span>' +
-        '<span class="fb-guide-close" title="Dismiss">✕</span>' +
-      '</div>' +
-      '<div class="fb-guide-pointer"></div>';
-
-    guideCalloutEl.querySelector(".fb-guide-close").addEventListener("click", function (e) {
-      e.stopPropagation();
-      try { sessionStorage.setItem("pfb_guide_dismissed", "1"); } catch (err) {}
-      if (guideCalloutEl) {
-        guideCalloutEl.remove();
-        guideCalloutEl = null;
-      }
-    });
-
-    guideCalloutEl.addEventListener("click", function (e) {
-      if (e.target.classList.contains("fb-guide-close")) return;
-      e.stopPropagation();
-      inspectBtn.click();
-    });
-
-    document.body.appendChild(guideCalloutEl);
-  }
 
   function showLoginWarningBanner() {
     if (loginWarningBannerEl) {
@@ -1057,16 +955,6 @@
     document.body.appendChild(loginWarningBannerEl);
   }
 
-  function checkUnsavedWarning() {
-    var hasNotes = isDirty() || load().length > 0;
-    if (!LOGGED_IN && hasNotes) {
-      showToast("⚠️ You have unsaved feedback! You must log in to save your notes to the server.", "err");
-      showLoginWarningBanner();
-    } else if (LOGGED_IN && isDirty()) {
-      showToast("⚠️ Note: You have unsaved changes. Don't forget to click 'Save feedback'!", "err");
-    }
-  }
-
   var dock = document.createElement("nav");
   dock.className = "fb-dock";
   dock.setAttribute("aria-label", "Feedback toolbar");
@@ -1081,6 +969,7 @@
 
   var toastEl = document.createElement("div");
   toastEl.className = "fb-toast";
+  toastEl.setAttribute("role", "status");
   toastEl.setAttribute("data-fb-ui", "");
   document.body.appendChild(toastEl);
   var toastTimer = null;
@@ -1096,7 +985,7 @@
   dock.innerHTML =
     '<span class="fb-tool"><span class="fb-tool-symbol" aria-hidden="true">♙</span>Customer</span>' +
     '<span class="fb-tool-divider" aria-hidden="true"></span>' +
-    '<button type="button" class="fb-tool" data-fb-inspect aria-pressed="false"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
+    '<button type="button" class="fb-tool" data-fb-inspect aria-pressed="false" title="Pick an element to leave feedback"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
     '<button type="button" class="fb-tool" data-fb-new aria-label="New feedback" title="New feedback"><span class="fb-tool-symbol" aria-hidden="true">＋</span><span class="fb-tool-new">New</span></button>' +
     '<span class="fb-tool-divider" aria-hidden="true"></span>' +
     '<span class="fb-tool" title="' + (ALLOW_NEW_FEEDBACK ? "Adding feedback is enabled" : "Adding feedback is disabled") + '">' +
@@ -1110,20 +999,60 @@
   inspectBtn.disabled = !ALLOW_NEW_FEEDBACK;
   newBtn.disabled = !ALLOW_NEW_FEEDBACK;
 
+  var inspectGuide = document.createElement("div");
+  inspectGuide.className = "fb-inspect-guide";
+  inspectGuide.hidden = true;
+  inspectGuide.innerHTML =
+    '<div id="pfb-inspect-help" role="status"><strong></strong><span></span></div>' +
+    '<button type="button" aria-label="Dismiss Inspect guide">×</button>';
+  var guideTitle = inspectGuide.querySelector("strong");
+  var guideText = inspectGuide.querySelector("#pfb-inspect-help span");
+  var dismissGuide = inspectGuide.querySelector("button");
+  dock.appendChild(inspectGuide);
+  var inspectGuideSeen = false;
+  try { inspectGuideSeen = sessionStorage.getItem("pfb_inspect_guide_seen") === "1"; } catch (e) {}
+
+  function updateInspectGuide() {
+    var visible = ALLOW_NEW_FEEDBACK && (mode || !inspectGuideSeen) &&
+      !formEl && !panel.classList.contains("fb-open");
+    inspectGuide.hidden = !visible;
+    inspectBtn.classList.toggle("fb-inspect-featured", ALLOW_NEW_FEEDBACK && (visible || mode));
+    if (!visible) {
+      inspectBtn.removeAttribute("aria-describedby");
+      return;
+    }
+    var title = mode ? "Select an element" : "Comment on part of this page";
+    var text = mode
+      ? "Click or tap the element, then write your feedback. Press Esc or Inspect again to exit."
+      : "Choose Inspect to comment on a specific element. Use + New for feedback about the whole page.";
+    if (guideTitle.textContent !== title) guideTitle.textContent = title;
+    if (guideText.textContent !== text) guideText.textContent = text;
+    dismissGuide.hidden = mode;
+    inspectBtn.setAttribute("aria-describedby", "pfb-inspect-help");
+  }
+
+  function markInspectGuideSeen() {
+    inspectGuideSeen = true;
+    try { sessionStorage.setItem("pfb_inspect_guide_seen", "1"); } catch (e) {}
+  }
+
+  dismissGuide.addEventListener("click", function () {
+    markInspectGuideSeen();
+    updateInspectGuide();
+    inspectBtn.focus();
+  });
   inspectBtn.addEventListener("click", function () {
-    closePanel();
+    markInspectGuideSeen();
     setMode(!mode);
   });
   newBtn.addEventListener("click", function () {
+    markInspectGuideSeen();
+    if (mode) setMode(false);
     openForm({ global: true });
   });
 
-  log("dock mounted", {
-    buttons: dock.children.length,
-    inBody: document.body.contains(dock),
-  });
-
   var saving = false;
+  var syncGeneration = 0;
 
   /* Dirty → Save feedback; clean → Resave (always available for the client) */
   function renderSaveButton() {
@@ -1166,6 +1095,7 @@
   }
 
   function submitFinal() {
+    if (saving) return;
     if (!LOGGED_IN) {
       showToast("🔒 Login required: Please log in to save your feedback.", "err");
       showLoginWarningBanner();
@@ -1180,16 +1110,18 @@
       return;
     }
     saving = true;
+    syncGeneration += 1;
     saveBtn.disabled = true;
     saveBtn.classList.remove("fb-ok", "fb-err", "fb-dirty");
     saveBtn.textContent = "Saving…";
     syncToServer(entries, function (ok, info) {
       saving = false;
       if (ok) {
-        clearDirty();
-        renderBadge();
-        renderMarkers();
-        if (panel.classList.contains("fb-open")) renderPanel();
+        refreshFeedbackView();
+        if (info && info.newerDraft) {
+          showToast("Saved earlier changes. Newer changes still need to be saved.", "ok");
+          return;
+        }
         saveBtn.classList.add("fb-ok");
         saveBtn.textContent = "Saved ✓";
         var msg =
@@ -1221,18 +1153,8 @@
     e.stopPropagation();
     if (saving) return;
     if (!LOGGED_IN) {
-      var n = load().length;
-      if (n > 0 || isDirty() || LOGIN_URL) {
-        showToast("🔒 Login required: Please log in to save your feedback to the server.", "err");
-        showLoginWarningBanner();
-        if (LOGIN_URL) {
-          if (confirm("🔒 Login required to save feedback to the server.\n\nYour notes will remain safely stored in this browser.\n\nWould you like to log in now?")) {
-            window.location.href = LOGIN_URL;
-          }
-        }
-      } else {
-        showToast("🔒 Please log in and add notes first.", "err");
-      }
+      if (LOGIN_URL) window.location.assign(LOGIN_URL);
+      else showLoginWarningBanner();
       return;
     }
     submitFinal();
@@ -1252,7 +1174,6 @@
     var count = load().length;
     toggle.querySelector(".fb-count").textContent = count;
     toggle.title = "Open feedback inspector · " + count + " notes";
-    inspectBtn.setAttribute("aria-pressed", String(mode && ALLOW_NEW_FEEDBACK));
   }
 
   /* ---------- markers ---------- */
@@ -1376,25 +1297,30 @@
 
   /* ---------- panel ---------- */
   function openPanel() {
+    captureDraftNote();
     renderPanel();
     panel.classList.add("fb-open");
     toggle.setAttribute("aria-expanded", "true");
+    updateInspectGuide();
   }
   function closePanel() {
+    captureDraftNote();
     panel.classList.remove("fb-open");
     toggle.setAttribute("aria-expanded", "false");
+    updateInspectGuide();
   }
 
-  var editingIndex = -1;
+  var editingId = null;
   /* Pending changes while editing: note/images/files = undefined → untouched */
   var editingDraft = null;
 
   function startEdit(i) {
-    editingIndex = i;
+    var entry = load()[i];
+    editingId = entry ? entry.id : null;
     editingDraft = { note: undefined, images: undefined, files: undefined };
   }
   function stopEdit() {
-    editingIndex = -1;
+    editingId = null;
     editingDraft = null;
   }
   /* Keep typed text across re-renders (e.g. after attaching a file) */
@@ -1406,7 +1332,7 @@
   function ensureDraftImages() {
     if (!editingDraft) return [];
     if (editingDraft.images === undefined) {
-      var cur = load()[editingIndex];
+      var cur = load().find(function (entry) { return entry.id === editingId; });
       editingDraft.images = cur ? imagesOf(cur).slice() : [];
     }
     return editingDraft.images;
@@ -1415,7 +1341,7 @@
   function ensureDraftFiles() {
     if (!editingDraft) return [];
     if (editingDraft.files === undefined) {
-      var cur = load()[editingIndex];
+      var cur = load().find(function (entry) { return entry.id === editingId; });
       editingDraft.files = cur ? filesOf(cur).map(function (f) {
         return Object.assign({}, f);
       }) : [];
@@ -1431,6 +1357,16 @@
   var panelStatus = "";
   var locatedTarget = null;
   var locateTimer;
+
+  function refreshFeedbackView() {
+    renderBadge();
+    renderMarkers();
+    renderSaveButton();
+    if (panel.classList.contains("fb-open")) {
+      captureDraftNote();
+      renderPanel();
+    }
+  }
 
   function renderPanel() {
     var allEntries = load();
@@ -1524,7 +1460,6 @@
           return String(field || "").toLowerCase().indexOf(query) !== -1;
         }));
     });
-    var editingEntry = allEntries[editingIndex];
     var body = visibleEntries.length
       ? visibleEntries
           .map(function (e) {
@@ -1536,7 +1471,7 @@
                 ? "fb-status-needs"
                 : "fb-status-open";
             var statusLabel = done ? "Resolved" : needs ? "? Needs reply" : "Open";
-            var isCurEditing = editingEntry && editingEntry.id === e.id;
+            var isCurEditing = editingId !== null && editingId === e.id;
             var id = escapePanelHtml(e.id);
             var number = scopedEntries.indexOf(e) + 1;
             var action = done ? "reopen" : needs ? "reply" : "edit";
@@ -1685,7 +1620,7 @@
         return;
       }
       if (mode) setMode(false);
-      closePanel();
+      else closePanel();
       target.scrollIntoView({
         block: "center",
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
@@ -1701,6 +1636,7 @@
       return;
     }
     if (t.hasAttribute("data-fb-add")) {
+      if (mode) setMode(false);
       openForm({ global: true });
       return;
     }
@@ -1711,25 +1647,24 @@
         captureDraftNote();
         activeIpFilter = targetIp;
         try { localStorage.setItem(IP_FILTER_KEY, targetIp); } catch (err) {}
-        renderBadge();
         renderMarkers();
         renderPanel();
       }
       return;
     }
     if (t.hasAttribute("data-fb-reload")) {
-      /* Force discard empty/stuck dirty and reload server list */
-      try {
-        localStorage.removeItem(DIRTY_KEY);
-        clearDeletedQueue();
-      } catch (err) {}
-      pullFromServer(function () {
-        renderBadge();
-        renderMarkers();
-        renderSaveButton();
-        renderPanel();
-        showToast("Loaded " + load().length + " note(s) from server.", "ok");
+      if (t.disabled) return;
+      t.disabled = true;
+      pullFromServer(function (ok) {
+        t.disabled = false;
+        if (ok) {
+          refreshFeedbackView();
+          showToast("Refreshed feedback from the server.", "ok");
+        } else {
+          showToast("Could not refresh feedback. Please try again.", "err");
+        }
       });
+      return;
     }
     var zoom = t.closest("[data-fb-zoom]");
     if (zoom) {
@@ -1763,14 +1698,10 @@
       ) {
         return;
       }
-      if (editingIndex === delIdx) stopEdit();
-      else if (editingIndex > delIdx) editingIndex -= 1;
+      if (editingId === delItem.id) stopEdit();
       queueDeleteId(delItem.id);
       delAll.splice(delIdx, 1);
       save(delAll);
-      renderBadge();
-      renderMarkers();
-      renderSaveButton();
       renderPanel();
       submitFinal();
     }
@@ -1791,9 +1722,6 @@
         if (row && row.id) queueDeleteId(row.id);
       });
       save([]);
-      renderBadge();
-      renderMarkers();
-      renderSaveButton();
       renderPanel();
       submitFinal();
     }
@@ -1967,27 +1895,13 @@
 
   /* ---------- feedback mode ---------- */
   function setMode(on) {
-    if (!ALLOW_NEW_FEEDBACK) on = false;
-    var wasOn = mode;
-    mode = on;
-    document.body.classList.toggle("fb-mode", on);
-    renderBadge();
-    updateModeHint(on);
-    if (!on) {
-      removeHover();
-      removeForm();
-      closePanel();
-      if (wasOn) {
-        checkUnsavedWarning();
-      }
-      renderGuideCallout();
-    } else {
-      if (guideCalloutEl) {
-        guideCalloutEl.remove();
-        guideCalloutEl = null;
-      }
-      showToast("🎯 Feedback Mode: ON — Click any element to add notes. Right-click anywhere to exit.", "ok");
-    }
+    mode = !!on && ALLOW_NEW_FEEDBACK;
+    document.body.classList.toggle("fb-mode", mode);
+    inspectBtn.setAttribute("aria-pressed", String(mode));
+    inspectBtn.title = mode ? "Exit Inspect mode" : "Pick an element to leave feedback";
+    removeHover();
+    removeForm();
+    closePanel();
   }
 
   toggle.addEventListener("click", function (e) {
@@ -2006,7 +1920,7 @@
   function isUi(el) {
     return (
       el.closest(
-        "[data-fb-ui], .fb-form, .fb-selected-box, .fb-hover-box, .fb-panel, .fb-marker, .fb-dock, .fb-toast, .fb-mode-hint"
+        "[data-fb-ui], .fb-form, .fb-selected-box, .fb-hover-box, .fb-panel, .fb-marker, .fb-dock, .fb-toast"
       ) !== null
     );
   }
@@ -2043,6 +1957,7 @@
     document.querySelectorAll(".fb-selected-box").forEach(function (b) {
       b.remove();
     });
+    updateInspectGuide();
   }
 
   /* Shared form for element feedback and page-wide (global) feedback */
@@ -2111,8 +2026,7 @@
       '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
       "</div>" +
       '<div class="fb-previews"></div>' +
-      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>' +
-      '<div class="fb-form-tip">💡 <span><b>Tip:</b> Right-click anywhere outside to dismiss popup</span></div>';
+      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
 
     if (el) {
       var rect = el.getBoundingClientRect();
@@ -2125,6 +2039,7 @@
       formEl.style.left = Math.max(8, left) + "px";
     }
     document.body.appendChild(formEl);
+    updateInspectGuide();
     var ta = formEl.querySelector("textarea");
     ta.focus();
 
@@ -2345,8 +2260,11 @@
         alert("Storage is full — Export JSON first, or delete some notes.");
         return;
       }
-      removeForm();
-      if (panel.classList.contains("fb-open")) renderPanel();
+      if (mode) setMode(false);
+      else removeForm();
+      panelQuery = "";
+      panelStatus = "";
+      openPanel();
     });
   }
 
@@ -2359,16 +2277,18 @@
       if (isUi(el)) return;
       e.preventDefault();
       e.stopPropagation();
-      openForm({ el: el });
+      if (!formEl) openForm({ el: el });
     },
     true
   );
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      removeForm();
       if (mode) setMode(false);
-      closePanel();
+      else {
+        removeForm();
+        closePanel();
+      }
     }
   });
 
@@ -2393,11 +2313,11 @@
         e.preventDefault();
         e.stopPropagation();
 
-        if (formEl) removeForm();
         if (mode) setMode(false);
-        if (isPanelOpen) closePanel();
-
-        showToast("✓ Feedback mode turned off (right-click)", "ok");
+        else {
+          removeForm();
+          if (isPanelOpen) closePanel();
+        }
       }
     },
     true
@@ -2405,10 +2325,9 @@
 
   renderBadge();
   renderSaveButton();
-  renderGuideCallout();
+  updateInspectGuide();
   pullFromServer(function () {
-    renderBadge();
-    renderMarkers();
+    refreshFeedbackView();
     log("init done", { entries: load().length, dirty: isDirty() });
   });
   })();
