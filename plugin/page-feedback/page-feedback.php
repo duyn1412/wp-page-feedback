@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Page Feedback
  * Description: Client click-to-comment widget, REST API, and MCP-ready notes for any WordPress site. Off by default.
- * Version: 0.1.24
+ * Version: 0.1.25
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Author: Duy
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-define('PFB_VERSION', '0.1.24');
+define('PFB_VERSION', '0.1.25');
 define('PFB_FILE', __FILE__);
 define('PFB_DIR', plugin_dir_path(__FILE__));
 define('PFB_URL', plugin_dir_url(__FILE__));

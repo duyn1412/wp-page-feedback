@@ -549,8 +549,8 @@
   css += ".fb-panel{position:fixed;right:22px;bottom:86px;max-height:min(520px,70vh);max-height:min(520px,70dvh);z-index:9999;width:min(465px,calc(100vw - 28px));overflow:hidden;background:#fff;border:1px solid #e1e8f3;border-radius:20px;box-shadow:0 25px 75px #091b3950;font:400 13px/1.45 Inter,system-ui,sans-serif;color:#1c2b44;display:none;}";
   css += ".fb-panel.fb-open{display:flex;flex-direction:column;}";
   css += ".fb-panel *, .fb-panel{box-sizing:border-box;}";
-  css += ".fb-panel-head,.fb-panel-intro,.fb-panel-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;}";
-  css += ".fb-panel-head{padding-top:10px;padding-bottom:2px;}";
+  css += ".fb-panel-head,.fb-panel-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;}";
+  css += ".fb-panel-head{padding-block:10px;}";
   css += ".fb-panel-heading,.fb-panel-head .fb-actions{display:flex;align-items:center;gap:8px;}";
   css += ".fb-panel-heading strong{font-size:17px;letter-spacing:-.025em;}";
   css += ".fb-panel-brand{width:32px;height:32px;display:grid;place-items:center;border-radius:12px;background:#eaf1ff;color:#1d55db;font-size:20px;}";
@@ -558,7 +558,7 @@
   css += ".fb-panel button.fb-panel-icon{border:0;background:transparent;color:#576982;border-radius:10px;width:34px;height:34px;padding:0;font:600 18px/1 system-ui;cursor:pointer;}";
   css += ".fb-panel button.fb-panel-icon:hover{background:#eef4ff;color:#1d4ed8;}";
   css += ".fb-panel button.fb-add{padding:9px 12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font:700 12px/1.4 system-ui;cursor:pointer;}";
-  css += ".fb-panel-intro small,.fb-panel-foot{color:#64748b;font-size:11px;overflow-wrap:anywhere;}";
+  css += ".fb-panel-foot{color:#64748b;font-size:11px;overflow-wrap:anywhere;}";
   css += ".fb-panel-segment{flex:none;display:flex;gap:3px;padding:3px;margin:0 16px 8px;border-radius:12px;background:#f1f5fa;}";
   css += ".fb-panel-segment button{flex:1;background:transparent;border:0;border-radius:9px;padding:6px 4px;color:#52647d;font:700 12px/1.4 system-ui;cursor:pointer;}";
   css += ".fb-panel-segment button[aria-pressed=true]{background:#fff;color:#1e293b;box-shadow:0 2px 8px #10294d12;}";
@@ -585,9 +585,14 @@
   css += ".fb-panel-menu button[data-fb-delete]{color:#b91c1c;}.fb-panel .fb-panel-foot .fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot .fb-savebtn:disabled{opacity:.55;cursor:default;}";
   css += ".fb-item-media{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}.fb-item .fb-item-media .fb-item-img{width:88px;height:56px;object-fit:contain;background:#f1f5f9;margin:0;}.fb-item-media button{padding:0;border:0;border-radius:8px;cursor:zoom-in;}";
   css += ".fb-located-target{outline:3px solid #2563eb!important;outline-offset:4px!important;}";
-  css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-intro,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
+  css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
   css += "@media(max-height:430px){.fb-panel{max-height:calc(100vh - 94px);max-height:calc(100dvh - 94px);overflow:auto;overscroll-behavior:contain;}.fb-panel-list{flex:none;overflow:visible;}}";
-  css += ".fb-item .fb-edit-ta{width:100%;box-sizing:border-box;min-height:60px;margin-top:.3rem;padding:.45rem .55rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
+  css += "@media(max-width:420px){.fb-panel-head .fb-actions,.fb-panel-heading{gap:4px;}.fb-panel .fb-add-label{display:none;}.fb-panel button.fb-add{padding:0;width:30px;height:32px;}.fb-panel button.fb-panel-icon,.fb-panel-options summary{width:30px;}}";
+  css += ".fb-item-editing{border-color:#c2d3eb;}.fb-edit-media:empty{display:none;}.fb-edit-media .fb-preview{display:block;margin:0;}.fb-edit-media .fb-remove-img{z-index:1;}";
+  css += ".fb-item .fb-edit-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:8px;}.fb-edit-actions{display:flex;gap:6px;margin-left:auto;}";
+  css += ".fb-panel .fb-edit-actions>button{box-sizing:border-box;min-height:32px;margin:0;padding:5px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:700 12px/1.3 system-ui,sans-serif;box-shadow:none;text-transform:none;}.fb-panel .fb-edit-actions>button:hover{background:#f1f5f9;color:#1e293b;}";
+  css += ".fb-panel .fb-edit-actions>button[data-fb-edit-save]{background:#2563eb;border-color:#2563eb;color:#fff;}.fb-panel .fb-edit-actions>button[data-fb-edit-save]:hover{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}";
+  css += ".fb-panel .fb-item .fb-edit-ta{width:100%;box-sizing:border-box;min-height:60px;margin-top:.3rem;padding:.45rem .55rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
   css += ".fb-empty{padding:.65rem .55rem;color:#8a94a6;}";
   css += ".fb-attach{display:flex;flex-direction:column;gap:.4rem;margin-top:.55rem;}";
   css += ".fb-attach-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}";
@@ -614,7 +619,6 @@
   css += ".fb-status-open{background:#e6f8ef;color:#087453;}";
   css += ".fb-status-done{background:#eef1f5;color:#475569;}";
   css += ".fb-status-needs{background:#fff4d6;color:#9a6b00;}";
-  css += ".fb-page-slug{font-weight:500;color:#6b7280;font-size:11px;}";
   css += ".fb-item.fb-done .fb-item-note{color:#8a94a6;}";
   css += ".fb-item.fb-needs{background:#fffbeb;}";
   css += ".fb-item .fb-item-res{margin:0 0 .35rem;padding:.35rem .5rem;background:#f4f9f5;border-radius:7px;font-size:12px;color:#1d8843;}";
@@ -1358,15 +1362,13 @@
       '<div class="fb-panel-head"><div class="fb-panel-heading">' +
       '<span class="fb-panel-brand" aria-hidden="true">▤</span><strong>Feedback</strong>' +
       '<span class="fb-panel-count" aria-live="polite"></span></div><div class="fb-actions">' +
+      (ALLOW_NEW_FEEDBACK ? '<button type="button" class="fb-add" data-fb-add aria-label="Add feedback" title="Add feedback">＋<span class="fb-add-label"> Add</span></button>' : "") +
       '<button type="button" class="fb-panel-icon" data-fb-export aria-label="Export JSON" title="Export JSON">⇩</button>' +
       '<details class="fb-panel-options"><summary aria-label="Feedback options" title="Feedback options">⚙</summary>' +
       '<div class="fb-panel-menu"><button type="button" data-fb-reload>Reload server</button>' +
       '<button type="button" data-fb-copy>Copy JSON</button>' +
       (allEntries.length ? '<button type="button" data-fb-clear-all>Clear all</button>' : "") +
-      '</div></details><button type="button" class="fb-panel-icon" data-fb-close aria-label="Close feedback" title="Close feedback">×</button></div></div>' +
-      '<div class="fb-panel-intro"><small class="fb-page-slug"></small>' +
-      (ALLOW_NEW_FEEDBACK ? '<button type="button" class="fb-add" data-fb-add>＋ Add feedback</button>' : "") +
-      '</div>';
+      '</div></details><button type="button" class="fb-panel-icon" data-fb-close aria-label="Close feedback" title="Close feedback">×</button></div></div>';
     var ipBar = "";
     if (CURRENT_IP) {
       ipBar = '<div class="fb-panel-segment" role="group" aria-label="Feedback scope">' +
@@ -1394,7 +1396,6 @@
       (isDirty() ? "Unsaved changes" : "Feedback on this page") +
       '</span><span data-fb-save-slot></span></div>';
     panel.querySelector("[data-fb-save-slot]").appendChild(saveBtn);
-    panel.querySelector(".fb-page-slug").textContent = PAGE_SLUG + ".json";
     panel.querySelector("[data-fb-search]").value = panelQuery;
     panel.querySelector("[data-fb-status]").value = panelStatus;
     renderPanelList(allEntries);
@@ -1460,15 +1461,15 @@
             return (
               '<div class="fb-item' +
               (done ? " fb-done" : "") +
-              (needs ? " fb-needs" : "") +
+              (needs ? " fb-needs" : "") + (isCurEditing ? " fb-item-editing" : "") +
               '" data-fb-id="' + id + '">' +
               '<div class="fb-item-top"><span><span class="fb-status ' + statusClass + '">' +
               statusLabel + '</span> <span class="fb-item-number">#' + number +
               (e.scope === "global" || e.selector === "(global)" ? " · Page-wide" : "") + '</span></span>' +
-              '<details class="fb-item-options"><summary aria-label="Actions for feedback ' + number + '">⋯</summary>' +
+              (isCurEditing ? "" : '<details class="fb-item-options"><summary aria-label="Actions for feedback ' + number + '">⋯</summary>' +
               '<div class="fb-panel-menu"><button type="button" data-fb-' + action + '="' +
               id + '">' + actionLabel + '</button><button type="button" data-fb-delete="' + id +
-              '">Delete</button></div></details></div>' +
+              '">Delete</button></div></details>') + "</div>" +
               (isCurEditing
                 ? (function () {
                     var noteVal =
@@ -1494,19 +1495,19 @@
                         ? "Reply here with more detail…"
                         : "Update your note…") +
                       '">' +
-                      noteVal.replace(/</g, "&lt;") +
-                      "</textarea>" +
+                      escapePanelHtml(noteVal) +
+                      '</textarea><div class="fb-item-media fb-edit-media">' +
                       imgs
                         .map(function (img, j) {
                           return (
-                            '<div class="fb-preview" style="display:block">' +
-                            '<img class="fb-item-img" src="' + resolveImg(img) +
-                            '" alt="Attachment" style="margin:0" />' +
+                            '<div class="fb-preview">' +
+                            '<img class="fb-item-img" src="' + escapePanelHtml(resolveImg(img)) +
+                            '" alt="Attachment" />' +
                             '<button type="button" class="fb-remove-img" data-fb-edit-rmimg="' +
-                            j + '" title="Remove image">✕</button></div>'
+                            j + '" title="Remove image" aria-label="Remove image">✕</button></div>'
                           );
                         })
-                        .join("") +
+                        .join("") + "</div>" +
                       docs
                         .map(function (f, j) {
                           return fileChipHtml(f, {
@@ -1515,21 +1516,11 @@
                           });
                         })
                         .join("") +
-                      '<div class="fb-attach" style="margin:.35rem 0 0">' +
-                      '<label class="fb-attach-btn">+ Add files' +
-                      '<input type="file" accept="' +
-                      FILE_ACCEPT +
-                      '" multiple class="fb-edit-file" /></label>' +
-                      '<p class="fb-attach-hint">Images, DOC, DOCX, PDF, TXT — multiple files OK (max 8 MB each)</p>' +
-                      "</div>" +
-                      '<div class="fb-row" style="margin:.4rem 0 .35rem">' +
-                      '<button type="button" data-fb-edit-cancel>Cancel</button>' +
-                      '<button type="button" data-fb-edit-save="' +
-                      e.id +
-                      '" style="background:#1d8843;border-color:#1d8843;color:#fff">' +
-                      (needs ? "Send reply" : "Save") +
-                      "</button>" +
-                      "</div>"
+                      '<div class="fb-edit-toolbar"><label class="fb-attach-btn" title="Images and documents, up to 8 MB each">＋ Attach files' +
+                      '<input type="file" accept="' + FILE_ACCEPT + '" multiple class="fb-edit-file"></label>' +
+                      '<div class="fb-edit-actions"><button type="button" data-fb-edit-cancel>Cancel</button>' +
+                      '<button type="button" data-fb-edit-save="' + id + '">' +
+                      (needs ? "Send reply" : "Save") + "</button></div></div>"
                     );
                   })()
                 : '<div class="fb-item-note">' +
@@ -1559,9 +1550,9 @@
                   String(e.resolution).replace(/</g, "&lt;") +
                   "</div>"
                 : "") +
-              '<div class="fb-item-meta"><span class="fb-item-date">' +
-              escapePanelHtml(e.date || (e.ts ? new Date(e.ts).toLocaleString() : "")) +
-              '</span>' + renderItemDetails(e) + '</div>' +
+              (isCurEditing ? "" : '<div class="fb-item-meta"><span class="fb-item-date">' +
+                escapePanelHtml(e.date || (e.ts ? new Date(e.ts).toLocaleString() : "")) +
+                '</span>' + renderItemDetails(e) + '</div>') +
               "</div>"
             );
           })
@@ -1615,7 +1606,7 @@
       }, 3000);
       return;
     }
-    if (t.hasAttribute("data-fb-add")) {
+    if (t.closest("[data-fb-add]")) {
       if (mode) setMode(false);
       openForm({ global: true });
       return;
