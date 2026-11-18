@@ -513,9 +513,14 @@
 
   /* ---------- styles ---------- */
   var css = "";
-  css += ".fb-dock{position:fixed;right:1rem;bottom:1rem;z-index:9999;display:flex;align-items:center;gap:.5rem;}";
-  css += ".fb-toggle{display:inline-flex;align-items:center;gap:.55rem;padding:.45rem .85rem .45rem 1rem;border:1px solid #1d4ed8;border-radius:999px;background:#2563eb;color:#fff;font:700 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:all .2s ease;user-select:none;}";
-  css += ".fb-toggle:hover{background:#1d4ed8;box-shadow:0 12px 35px rgba(0,0,0,.45);}";
+  css += ".fb-dock{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;align-items:center;gap:5px;padding:7px;background:#0a1931f2;color:#fff;border:1px solid #ffffff30;border-radius:16px;box-shadow:0 16px 35px #06172d5c;backdrop-filter:blur(14px);box-sizing:border-box;font:700 12px/1.25 Inter,system-ui,sans-serif;}";
+  css += ".fb-dock .fb-tool{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:9px 13px;margin:0;border:0;border-radius:10px;background:transparent;color:#d9e5f6;font:inherit;white-space:nowrap;box-shadow:none;}";
+  css += ".fb-dock button.fb-tool{cursor:pointer;}.fb-dock button.fb-tool:disabled{opacity:.48;cursor:default;}";
+  css += ".fb-dock button.fb-tool:hover:not(:disabled),.fb-dock .fb-toggle,.fb-dock button[aria-pressed=true]{background:#ffffff22;color:#fff;}";
+  css += ".fb-dock button:focus-visible{outline:2px solid #a7c7ff;outline-offset:1px;}";
+  css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
+  css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
+  css += "@media(max-width:560px){.fb-dock{bottom:9px;width:calc(100vw - 20px);justify-content:center;}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
   css += "@keyframes fbPulseGlow{0%{box-shadow:0 0 0 0 rgba(59,130,246,.6),0 10px 30px rgba(0,0,0,.35)}70%{box-shadow:0 0 0 12px rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0),0 10px 30px rgba(0,0,0,.35)}}";
   css += "@keyframes fbGuideBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}";
   css += ".fb-guide-callout{position:fixed;right:1rem;bottom:4.3rem;z-index:10001;display:flex;flex-direction:column;align-items:flex-end;pointer-events:auto;animation:fbGuideBounce 2.5s infinite ease-in-out;}";
@@ -555,7 +560,6 @@
   css += ".fb-frozen{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border-radius:999px;background:#fff8e8;border:1px solid #f0d78a;color:#6b4e00;font:600 12px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:min(280px,70vw);}";
   css += ".fb-form-global{position:fixed;top:18vh;left:50%;transform:translateX(-50%);width:min(400px,92vw);}";
   css += ".fb-scope{display:inline-block;padding:.1em .5em;border-radius:999px;font:700 9.5px/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px;margin-right:.3em;background:#eef2fb;color:#003b95;}";
-  css += ".fb-toggle .fb-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.3em;height:1.3em;padding:0 .3em;border-radius:999px;background:#e04545;font-size:11px;}";
   css += "body.fb-mode, body.fb-mode *{cursor:crosshair!important;}";
   css += "body.fb-mode .fb-panel,body.fb-mode .fb-panel *{cursor:auto!important;}body.fb-mode .fb-panel button,body.fb-mode .fb-panel summary{cursor:pointer!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
@@ -597,7 +601,7 @@
   css += ".fb-panel-options{position:relative;}.fb-panel-options summary{list-style:none;display:grid;place-items:center;cursor:pointer;width:34px;height:34px;border-radius:10px;color:#576982;font-size:18px;}.fb-panel-options summary::-webkit-details-marker{display:none;}";
   css += ".fb-panel-menu{position:absolute;z-index:1;top:100%;right:0;min-width:160px;padding:6px;border:1px solid #e4e9f2;border-radius:10px;background:#fff;box-shadow:0 8px 20px #10294d20;}";
   css += ".fb-panel-menu button,.fb-panel-foot button{border:0;background:transparent;color:#2355af;padding:6px;font:700 12px/1.4 system-ui;cursor:pointer;white-space:nowrap;}";
-  css += ".fb-panel-menu button{display:block;width:100%;text-align:left;}.fb-panel-menu button:hover{background:#eef4ff;}.fb-panel-menu button[data-fb-clear-all]{color:#b91c1c;}";
+  css += ".fb-panel-menu button:disabled{opacity:.55;cursor:default;}.fb-panel-menu button{box-shadow:none;display:block;width:100%;text-align:left;}.fb-panel-menu button:hover{background:#eef4ff;}.fb-panel-menu button[data-fb-clear-all]{color:#b91c1c;}";
   css += ".fb-item{padding:14px;margin-bottom:11px;border:1px solid #e4eaf3;border-radius:14px;background:#fff;}";
   css += ".fb-item .fb-item-sel{padding:8px;border-radius:8px;background:#f6f9ff;font:600 11px/1.5 ui-monospace,monospace;color:#52647d;overflow-wrap:anywhere;}";
   css += ".fb-item .fb-item-note{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;}";
@@ -996,7 +1000,7 @@
     guideCalloutEl.innerHTML =
       '<div class="fb-guide-bubble">' +
         '<span style="font-size:15px">👆</span>' +
-        '<span><b>Open Feedback, then choose Pick an element</b></span>' +
+        '<span><b>Choose Inspect to select an element</b></span>' +
         '<span class="fb-guide-close" title="Dismiss">✕</span>' +
       '</div>' +
       '<div class="fb-guide-pointer"></div>';
@@ -1013,7 +1017,7 @@
     guideCalloutEl.addEventListener("click", function (e) {
       if (e.target.classList.contains("fb-guide-close")) return;
       e.stopPropagation();
-      openPanel();
+      inspectBtn.click();
     });
 
     document.body.appendChild(guideCalloutEl);
@@ -1058,8 +1062,9 @@
     }
   }
 
-  var dock = document.createElement("div");
+  var dock = document.createElement("nav");
   dock.className = "fb-dock";
+  dock.setAttribute("aria-label", "Feedback toolbar");
   dock.setAttribute("data-fb-ui", "");
   document.body.appendChild(dock);
 
@@ -1068,7 +1073,6 @@
   saveBtn.className = "fb-savebtn";
   saveBtn.setAttribute("data-fb-ui", "");
   saveBtn.textContent = "Save feedback";
-  dock.appendChild(saveBtn);
 
   var toastEl = document.createElement("div");
   toastEl.className = "fb-toast";
@@ -1084,30 +1088,30 @@
     }, 4500);
   }
 
-  if (!ALLOW_NEW_FEEDBACK) {
-    var frozenNote = document.createElement("div");
-    frozenNote.className = "fb-frozen";
-    frozenNote.setAttribute("data-fb-ui", "");
-    frozenNote.textContent = LOGGED_IN
-      ? "Adding notes is paused — view existing only"
-      : "Log in to leave notes";
-    frozenNote.title = LOGGED_IN
-      ? "An editor paused new notes. Existing notes stay available."
-      : "Sign in to add or save feedback on this page.";
-    if (!LOGGED_IN && LOGIN_URL) {
-      frozenNote.style.cursor = "pointer";
-      frozenNote.addEventListener("click", function () {
-        location.href = LOGIN_URL;
-      });
-    }
-    dock.appendChild(frozenNote);
-  }
+  dock.innerHTML =
+    '<span class="fb-tool"><span class="fb-tool-symbol" aria-hidden="true">♙</span>Customer</span>' +
+    '<span class="fb-tool-divider" aria-hidden="true"></span>' +
+    '<button type="button" class="fb-tool" data-fb-inspect aria-pressed="false"><span class="fb-tool-symbol" aria-hidden="true">⌖</span>Inspect</button>' +
+    '<button type="button" class="fb-tool" data-fb-new aria-label="New feedback" title="New feedback"><span class="fb-tool-symbol" aria-hidden="true">＋</span><span class="fb-tool-new">New</span></button>' +
+    '<span class="fb-tool-divider" aria-hidden="true"></span>' +
+    '<span class="fb-tool" title="' + (ALLOW_NEW_FEEDBACK ? "Adding feedback is enabled" : "Adding feedback is disabled") + '">' +
+    '<span class="fb-tool-dot' + (ALLOW_NEW_FEEDBACK ? "" : " fb-off") + '" aria-hidden="true"></span>' +
+    (ALLOW_NEW_FEEDBACK ? "ON" : "OFF") + '</span>' +
+    '<button type="button" class="fb-tool fb-toggle" aria-label="Feedback"><span class="fb-tool-symbol" aria-hidden="true">▤</span><span class="fb-count">0</span></button>';
 
-  var toggle = document.createElement("button");
-  toggle.type = "button";
-  toggle.className = "fb-toggle";
-  toggle.setAttribute("data-fb-ui", "");
-  dock.appendChild(toggle);
+  var toggle = dock.querySelector(".fb-toggle");
+  var inspectBtn = dock.querySelector("[data-fb-inspect]");
+  var newBtn = dock.querySelector("[data-fb-new]");
+  inspectBtn.disabled = !ALLOW_NEW_FEEDBACK;
+  newBtn.disabled = !ALLOW_NEW_FEEDBACK;
+
+  inspectBtn.addEventListener("click", function () {
+    closePanel();
+    setMode(!mode);
+  });
+  newBtn.addEventListener("click", function () {
+    openForm({ global: true });
+  });
 
   log("dock mounted", {
     buttons: dock.children.length,
@@ -1127,7 +1131,7 @@
     saveBtn.disabled = false;
 
     if (!LOGGED_IN) {
-      if (dirty || n) {
+      if (dirty || n || LOGIN_URL) {
         saveBtn.classList.add("fb-login-btn");
         saveBtn.innerHTML = '🔒 <span>Log in to save</span>';
         saveBtn.title = "Login required: Please log in to save your feedback to the server.";
@@ -1213,7 +1217,7 @@
     if (saving) return;
     if (!LOGGED_IN) {
       var n = load().length;
-      if (n > 0 || isDirty()) {
+      if (n > 0 || isDirty() || LOGIN_URL) {
         showToast("🔒 Login required: Please log in to save your feedback to the server.", "err");
         showLoginWarningBanner();
         if (LOGIN_URL) {
@@ -1240,48 +1244,10 @@
   document.body.appendChild(panel);
 
   function renderBadge() {
-    var allEntries = load();
-    var entries = getFilteredEntries(allEntries);
-    var needs = entries.filter(function (e) {
-      return e.status === "needs_info";
-    }).length;
-    var open = entries.filter(function (e) {
-      return e.status === "open" || e.status === "needs_info";
-    }).length;
-    var total = entries.length;
-
-
-    var countHtml = "";
-    if (needs) {
-      countHtml =
-        ' <span class="fb-count fb-count-needs" title="' +
-        needs +
-        " need your reply / " +
-        open +
-        " active / " +
-        total +
-        ' on this page">' +
-        needs +
-        "?</span>";
-    } else if (open) {
-      countHtml =
-        ' <span class="fb-count" title="' +
-        open +
-        " open / " +
-        total +
-        ' on this page">' +
-        open +
-        "</span>";
-    } else if (total) {
-      countHtml =
-        ' <span class="fb-count fb-count-done" title="' +
-        total +
-        ' notes on this page (all done)">' +
-        total +
-        "</span>";
-    }
-    toggle.innerHTML = '<span aria-hidden="true">▤</span> Feedback' + countHtml;
-    toggle.title = "Open feedback inspector";
+    var count = load().length;
+    toggle.querySelector(".fb-count").textContent = count;
+    toggle.title = "Open feedback inspector · " + count + " notes";
+    inspectBtn.setAttribute("aria-pressed", String(mode && ALLOW_NEW_FEEDBACK));
   }
 
   /* ---------- markers ---------- */
@@ -1471,9 +1437,7 @@
       '<span class="fb-panel-count" aria-live="polite"></span></div><div class="fb-actions">' +
       '<button type="button" class="fb-panel-icon" data-fb-export aria-label="Export JSON" title="Export JSON">⇩</button>' +
       '<details class="fb-panel-options"><summary aria-label="Feedback options" title="Feedback options">⚙</summary>' +
-      '<div class="fb-panel-menu"><button type="button" data-fb-sync>' +
-      (!LOGGED_IN ? "Log in to save" : isDirty() ? "Save to server" : "Resave") +
-      '</button><button type="button" data-fb-reload>Reload server</button>' +
+      '<div class="fb-panel-menu"><span data-fb-save-slot></span><button type="button" data-fb-reload>Reload server</button>' +
       '<button type="button" data-fb-copy>Copy JSON</button>' +
       (allEntries.length ? '<button type="button" data-fb-clear-all>Clear all</button>' : "") +
       '</div></details><button type="button" class="fb-panel-icon" data-fb-close aria-label="Close feedback" title="Close feedback">×</button></div></div>' +
@@ -1508,6 +1472,7 @@
       '<div class="fb-panel-list"></div><div class="fb-panel-foot"><span>' +
       (!LOGGED_IN ? "Log in to save to server" : isDirty() ? "Unsaved changes" : "Feedback on this page") +
       '</span><button type="button" data-fb-export>Export JSON</button></div>';
+    panel.querySelector("[data-fb-save-slot]").appendChild(saveBtn);
     panel.querySelector(".fb-page-slug").textContent = PAGE_SLUG + ".json";
     panel.querySelector("[data-fb-search]").value = panelQuery;
     panel.querySelector("[data-fb-status]").value = panelStatus;
@@ -1730,20 +1695,6 @@
         renderPanel();
       }
       return;
-    }
-    if (t.hasAttribute("data-fb-sync")) {
-      if (!LOGGED_IN) {
-        showToast("🔒 Login required: Please log in to save your feedback to the server.", "err");
-        showLoginWarningBanner();
-        if (LOGIN_URL) {
-          if (confirm("🔒 Login required to save feedback to the server.\n\nYour notes will remain safely stored in this browser.\n\nWould you like to log in now?")) {
-            window.location.href = LOGIN_URL;
-          }
-        }
-        return;
-      }
-      submitFinal();
-      renderPanel();
     }
     if (t.hasAttribute("data-fb-reload")) {
       /* Force discard empty/stuck dirty and reload server list */
