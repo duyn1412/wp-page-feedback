@@ -533,9 +533,10 @@
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
   css += ".fb-form{position:fixed;z-index:9999;box-sizing:border-box;display:flex;flex-direction:column;width:320px;background:#fff;border:1px solid #d5dce8;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.25);padding: .85rem;font:400 13px/1.45 system-ui,sans-serif;color:#121826;}";
-  css += ".fb-form .fb-sel{font:600 11px/1.3 ui-monospace,monospace;color:#5a6578;word-break:break-all;margin:0 0 .5rem;}";
-  css += ".fb-form textarea{width:100%;box-sizing:border-box;min-height:70px;padding:.5rem .6rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
-  css += ".fb-form-content{min-height:0;overflow:auto;overscroll-behavior:contain;}.fb-form-header{flex:none;}";
+  css += ".fb-form-header{flex:none;margin:0 0 6px;font:700 14px/1.35 system-ui,sans-serif;color:#1e293b;}";
+  css += ".fb-form textarea{display:block;width:100%;box-sizing:border-box;min-height:58px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font:400 14px/1.4 system-ui,sans-serif;color:#1e293b;resize:vertical;}";
+  css += ".fb-form-content{min-height:0;overflow:auto;overscroll-behavior:contain;}";
+  css += ".fb-form-attachments{margin-top:7px;}.fb-form-attachments summary{width:fit-content;color:#475569;font:600 12px/1.4 system-ui,sans-serif;cursor:pointer;}.fb-form-attachments summary:hover{color:#1e293b;}.fb-form-attachments .fb-attach{margin-top:6px;}";
   css += ".fb-form .fb-row{flex:none;display:flex;gap:.5rem;justify-content:flex-end;margin-top:.6rem;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
   css += ".fb-form[data-fb-ui] .fb-row>button{appearance:none;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:36px;margin:0;padding:7px 13px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:700 12px/1.3 system-ui,sans-serif;letter-spacing:normal;text-transform:none;box-shadow:none;}";
@@ -2103,20 +2104,9 @@
     formEl.setAttribute("data-fb-ui", "");
     var currentVp = window.innerWidth + "×" + window.innerHeight;
     formEl.innerHTML =
-      '<div class="fb-form-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.45rem;">' +
-      '<p class="fb-sel" style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' +
-      (isGlobal ? "🌐 General feedback for this page" : selector) +
-      "</p>" +
-      '<span class="fb-vp-badge" title="Screen size at note creation" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#eef2f6;color:#334155;white-space:nowrap;flex-shrink:0;">📱 ' +
-      currentVp +
-      "</span>" +
-      "</div>" +
-      '<div class="fb-form-content"><textarea placeholder="' +
-      (isGlobal
-        ? "Overall comments about this page (layout, colors, general feel…)"
-        : "Comment on this element…") +
-      '"></textarea>' +
-      '<div class="fb-attach">' +
+      '<p class="fb-form-header">' + (isGlobal ? "General feedback" : "Element feedback") + '</p>' +
+      '<div class="fb-form-content"><textarea rows="2" aria-label="Feedback" placeholder="Write your feedback…"></textarea>' +
+      '<details class="fb-form-attachments"><summary>Add image or file</summary><div class="fb-attach">' +
       '<div class="fb-attach-row">' +
       '<button type="button" class="fb-capture-btn" title="' +
       (isGlobal ? "Take a screenshot of current screen" : "Take a screenshot of this element") +
@@ -2130,10 +2120,9 @@
         ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb"> Auto-capture</label>'
         : "") +
       "</div>" +
-      '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
-      "</div>" +
-      '<div class="fb-previews"></div></div>' +
-      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button><button type="button" class="fb-save">Save</button></div>';
+      '</div><div class="fb-previews"></div></details></div>' +
+      '<div class="fb-row"><button type="button" class="fb-cancel">Cancel</button>' +
+      '<button type="button" class="fb-save" title="Save draft (Ctrl or Command + Enter)" aria-keyshortcuts="Control+Enter Meta+Enter">Save draft</button></div>';
 
     document.body.appendChild(formEl);
     stopPositioningForm = positionFeedbackForm(formEl, el, opts.pointer);
@@ -2145,6 +2134,7 @@
     var attachedFiles = [];
     var fileInput = formEl.querySelector('input[type="file"]');
     var previews = formEl.querySelector(".fb-previews");
+    var attachments = formEl.querySelector(".fb-form-attachments");
 
     var isCapturing = false;
 
@@ -2200,6 +2190,7 @@
 
     function addAttachment(att) {
       if (!att) return;
+      attachments.open = true;
       if (attachedImages.length + attachedFiles.length >= MAX_ATTACH_COUNT) {
         showToast("Max " + MAX_ATTACH_COUNT + " attachments per note.", "err");
         return;
@@ -2296,8 +2287,15 @@
       });
     }
 
+    var draftButton = formEl.querySelector(".fb-save");
+    ta.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey) || event.isComposing) return;
+      event.preventDefault();
+      draftButton.click();
+    });
+
     formEl.querySelector(".fb-cancel").addEventListener("click", removeForm);
-    formEl.querySelector(".fb-save").addEventListener("click", function () {
+    draftButton.addEventListener("click", function () {
       if (isCapturing) {
         showToast("Please wait for screenshot to finish capturing...", "err");
         return;
