@@ -538,13 +538,13 @@
   css += ".fb-form-content{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;}";
   css += ".fb-form[data-fb-ui] textarea{display:block;width:100%;height:36px;min-height:0;max-height:120px;box-sizing:border-box;margin:0;padding:8px;border:0;outline:none;background:#fff;color:#111827;font:400 14px/1.4 system-ui,sans-serif;resize:none;}";
   css += ".fb-form.fb-compose-expanded textarea{height:62px;min-height:62px;}";
-  css += ".fb-form-attachments{padding:0 8px 8px;}.fb-form-attachments[hidden]{display:none;}.fb-form-attachments .fb-attach{margin-top:0;}";
-  css += ".fb-form-attachments .fb-attach-row{gap:6px;}.fb-form-attachments .fb-capture-btn,.fb-form-attachments .fb-attach-btn{box-sizing:border-box;min-height:28px;min-width:0;margin:0;padding:4px 6px;font:700 12px/1.3 system-ui,sans-serif;white-space:nowrap;}.fb-form-attachments .fb-auto-cap-lbl{min-height:28px;margin:0;padding:0 3px;gap:4px;font:600 12px/1.3 system-ui,sans-serif;white-space:nowrap;}";
+  css += ".fb-form-attachments{min-width:0;}.fb-form-attachments[hidden]{display:none;}.fb-form .fb-previews:not(:empty){padding:0 8px 6px;}";
+  css += ".fb-form-attachments .fb-attach-row{gap:4px;flex-wrap:nowrap;}.fb-form .fb-form-attachments .fb-capture-btn,.fb-form .fb-form-attachments .fb-attach-btn{box-sizing:border-box;min-height:28px;min-width:0;margin:0;padding:3px 5px;font:700 11px/1.3 system-ui,sans-serif;white-space:nowrap;}.fb-form-attachments .fb-auto-cap-lbl{min-height:28px;margin:0;padding:0 3px;gap:4px;font:600 12px/1.3 system-ui,sans-serif;white-space:nowrap;}";
   css += ".fb-form-attachments .fb-attach-btn{position:relative;}.fb-form-attachments .fb-attach-btn input[type=file]{display:block;position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-form-attachments .fb-attach-btn:focus-within{outline:2px solid #dc2626;outline-offset:2px;}";
   css += ".fb-form .fb-row{display:flex;align-items:center;justify-content:flex-end;gap:3px;}";
-  css += ".fb-form.fb-compose-expanded .fb-row{justify-content:space-between;padding:4px 2px 0;border-top:1px solid #e2e8f0;}.fb-form .fb-compose-actions{display:flex;align-items:center;gap:3px;}";
+  css += ".fb-form.fb-compose-expanded .fb-row{justify-content:space-between;padding:4px 2px 0;border-top:1px solid #e2e8f0;}.fb-form .fb-compose-actions{display:flex;align-items:center;gap:3px;margin-left:auto;}.fb-form .fb-row>.fb-compose-attach,.fb-form .fb-compose-actions{flex:none;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
-  css += ".fb-form[data-fb-ui] .fb-row button{appearance:none;box-sizing:border-box;display:grid;place-items:center;width:32px;height:32px;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:8px;background:#fff;color:#475569;box-shadow:none;}";
+  css += ".fb-form[data-fb-ui] .fb-row>button,.fb-form[data-fb-ui] .fb-compose-actions>button{appearance:none;box-sizing:border-box;display:grid;place-items:center;width:32px;height:32px;min-width:0;min-height:0;margin:0;padding:0;border:0;border-radius:8px;background:#fff;color:#475569;box-shadow:none;}";
   css += ".fb-form[data-fb-ui] .fb-row button:hover,.fb-form[data-fb-ui] .fb-row button[aria-expanded=true]{background:#f1f5f9;color:#111827;}.fb-form[data-fb-ui] .fb-row svg{display:block;width:17px;height:17px;}";
   css += ".fb-form[data-fb-ui] .fb-row button.fb-save{background:#dc2626;color:#fff;border-radius:50%;}.fb-form[data-fb-ui] .fb-row button.fb-save:hover{background:#b91c1c;}.fb-form[data-fb-ui] .fb-row button.fb-save:disabled{background:#f1f5f9;color:#64748b;cursor:default;}";
   css += ".fb-form[data-fb-ui] .fb-row button:focus-visible,button.fb-marker[data-fb-ui]:focus-visible{outline:2px solid #dc2626;outline-offset:2px;}";
@@ -2111,7 +2111,10 @@
     formEl.innerHTML =
       '<div class="fb-form-content"><textarea rows="1" aria-label="' +
       (isGlobal ? "General feedback" : "Element feedback") + '" placeholder="Add feedback…"></textarea>' +
-      '<div id="pfb-compose-attachments" class="fb-form-attachments" hidden><div class="fb-attach">' +
+      '<div class="fb-previews"></div></div>' +
+      '<div class="fb-row"><button type="button" class="fb-compose-attach" aria-label="Add image or file" title="Add image or file" aria-controls="pfb-compose-attachments" aria-expanded="false">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m9 13 6-6a3 3 0 0 1 4 4l-8 8a5 5 0 0 1-7-7l8-8"/></svg></button>' +
+      '<div id="pfb-compose-attachments" class="fb-form-attachments" hidden>' +
       '<div class="fb-attach-row">' +
       '<button type="button" class="fb-capture-btn" title="' +
       (isGlobal ? "Take a screenshot of current screen" : "Take a screenshot of this element") +
@@ -2122,10 +2125,7 @@
       (!isGlobal
         ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb" aria-label="Auto-capture"> Auto</label>'
         : "") +
-      "</div>" +
-      '</div><div class="fb-previews"></div></div></div>' +
-      '<div class="fb-row"><button type="button" class="fb-compose-attach" aria-label="Add image or file" title="Add image or file" aria-controls="pfb-compose-attachments" aria-expanded="false">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m9 13 6-6a3 3 0 0 1 4 4l-8 8a5 5 0 0 1-7-7l8-8"/></svg></button>' +
+      "</div></div>" +
       '<div class="fb-compose-actions"><button type="button" class="fb-cancel" aria-label="Cancel" title="Cancel">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>' +
       '<button type="button" class="fb-save" aria-label="Save draft" title="Save draft (Ctrl or Command + Enter)" aria-keyshortcuts="Control+Enter Meta+Enter" disabled>' +
@@ -2150,7 +2150,7 @@
 
     function updateComposer() {
       var hasAttachment = attachedImages.length > 0 || attachedFiles.length > 0;
-      var expanded = !!ta.value || !attachments.hidden;
+      var expanded = !!ta.value || !attachments.hidden || hasAttachment || isCapturing;
       composer.classList.toggle("fb-compose-expanded", expanded);
       ta.style.height = "";
       if (expanded) ta.style.height = Math.min(120, ta.scrollHeight) + "px";
