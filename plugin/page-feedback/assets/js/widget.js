@@ -2128,9 +2128,7 @@
       FILE_ACCEPT +
       '" multiple /></label>' +
       (!isGlobal
-        ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb"' +
-          (localStorage.getItem("pfb_auto_capture") === "1" ? " checked" : "") +
-          " /> Auto-capture</label>"
+        ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb"> Auto-capture</label>'
         : "") +
       "</div>" +
       '<p class="fb-attach-hint">📸 Capture element or attach images, DOC, PDF, TXT</p>' +
@@ -2252,8 +2250,6 @@
       if (found) ev.preventDefault();
     });
 
-    var autoCapKey = "pfb_auto_capture";
-    var isAutoCap = localStorage.getItem(autoCapKey) === "1";
     var captureBtn = formEl.querySelector(".fb-capture-btn");
     var autoCapCb = formEl.querySelector(".fb-auto-cap-cb");
     log("openForm mounted", { hasCaptureBtn: !!captureBtn, hasAutoCapCb: !!autoCapCb });
@@ -2295,16 +2291,10 @@
 
     if (autoCapCb) {
       autoCapCb.addEventListener("change", function () {
-        var checked = autoCapCb.checked;
-        localStorage.setItem(autoCapKey, checked ? "1" : "0");
-        if (checked && attachedImages.length === 0) {
+        if (autoCapCb.checked && attachedImages.length === 0) {
           doCapture();
         }
       });
-    }
-
-    if (el && isAutoCap) {
-      setTimeout(doCapture, 100);
     }
 
     formEl.querySelector(".fb-cancel").addEventListener("click", removeForm);
