@@ -539,6 +539,8 @@
   css += ".fb-form[data-fb-ui] textarea{display:block;width:100%;height:36px;min-height:0;max-height:120px;box-sizing:border-box;margin:0;padding:8px;border:0;outline:none;background:#fff;color:#111827;font:400 14px/1.4 system-ui,sans-serif;resize:none;}";
   css += ".fb-form.fb-compose-expanded textarea{height:62px;min-height:62px;}";
   css += ".fb-form-attachments{padding:0 8px 8px;}.fb-form-attachments[hidden]{display:none;}.fb-form-attachments .fb-attach{margin-top:0;}";
+  css += ".fb-form-attachments .fb-attach-row{gap:6px;}.fb-form-attachments .fb-capture-btn,.fb-form-attachments .fb-attach-btn{box-sizing:border-box;min-height:28px;min-width:0;margin:0;padding:4px 6px;font:700 12px/1.3 system-ui,sans-serif;white-space:nowrap;}.fb-form-attachments .fb-auto-cap-lbl{min-height:28px;margin:0;padding:0 3px;gap:4px;font:600 12px/1.3 system-ui,sans-serif;white-space:nowrap;}";
+  css += ".fb-form-attachments .fb-attach-btn{position:relative;}.fb-form-attachments .fb-attach-btn input[type=file]{display:block;position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-form-attachments .fb-attach-btn:focus-within{outline:2px solid #dc2626;outline-offset:2px;}";
   css += ".fb-form .fb-row{display:flex;align-items:center;justify-content:flex-end;gap:3px;}";
   css += ".fb-form.fb-compose-expanded .fb-row{justify-content:space-between;padding:4px 2px 0;border-top:1px solid #e2e8f0;}.fb-form .fb-compose-actions{display:flex;align-items:center;gap:3px;}";
   css += ".fb-form button{padding:.42rem .85rem;border-radius:8px;border:1px solid #d5dce8;background:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;}";
@@ -2113,14 +2115,12 @@
       '<div class="fb-attach-row">' +
       '<button type="button" class="fb-capture-btn" title="' +
       (isGlobal ? "Take a screenshot of current screen" : "Take a screenshot of this element") +
-      '">📸 ' +
-      (isGlobal ? "Capture screen" : "Capture element") +
-      "</button>" +
-      '<label class="fb-attach-btn">+ Attach files<input type="file" accept="' +
+      '" aria-label="' + (isGlobal ? "Capture screen" : "Capture element") + '">Capture</button>' +
+      '<label class="fb-attach-btn" title="Attach files">Files<input type="file" aria-label="Attach files" accept="' +
       FILE_ACCEPT +
       '" multiple /></label>' +
       (!isGlobal
-        ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb"> Auto-capture</label>'
+        ? '<label class="fb-auto-cap-lbl" title="Automatically capture screenshot of selected element"><input type="checkbox" class="fb-auto-cap-cb" aria-label="Auto-capture"> Auto</label>'
         : "") +
       "</div>" +
       '</div><div class="fb-previews"></div></div></div>' +
@@ -2278,7 +2278,7 @@
       if (captureBtn) {
         captureBtn.disabled = true;
         captureBtn.innerHTML =
-          '<span class="fb-capture-spinner"></span> Capturing...';
+          '<span class="fb-capture-spinner"></span> Capturing…';
       }
       showCaptureLoading();
 
@@ -2290,7 +2290,8 @@
         log("captureTarget callback received", { hasDataUrl: !!dataUrl });
         if (captureBtn) {
           captureBtn.disabled = false;
-          captureBtn.textContent = isGlobal ? "📸 Recapture screen" : "📸 Recapture element";
+          captureBtn.textContent = dataUrl ? "Recapture" : "Capture";
+          captureBtn.setAttribute("aria-label", (dataUrl ? "Recapture " : "Capture ") + (isGlobal ? "screen" : "element"));
         }
         if (dataUrl) {
           addAttachment({ kind: "image", data: dataUrl });
