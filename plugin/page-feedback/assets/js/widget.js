@@ -570,12 +570,12 @@
   css += ".fb-panel button.fb-add{min-height:28px;padding:4px 8px;border:0;border-radius:8px;background:var(--pfb-accent);color:#fff;font:700 14px/1.4 system-ui;cursor:pointer;}";
   css += ".fb-panel button.fb-add:hover{background:var(--pfb-accent-hover);}";
   css += ".fb-panel-foot{color:#475569;font-size:14px;overflow-wrap:anywhere;}.fb-panel-save-status{min-width:0;}.fb-panel-save-status[data-kind=success]{color:#166534;}.fb-panel-save-status[data-kind=error]{color:#b91c1c;}";
-  css += ".fb-panel-segment{flex:none;display:flex;gap:3px;padding:3px;margin:8px 16px 6px;border-radius:8px;background:var(--pfb-soft);}";
-  css += ".fb-panel-segment button{flex:1;background:transparent;border:0;border-radius:6px;padding:4px;color:var(--pfb-muted);font:700 14px/1.4 system-ui;cursor:pointer;}";
-  css += ".fb-panel-segment button[aria-pressed=true]{background:#fff;color:#1e293b;box-shadow:0 1px 3px #0f172a24;}";
+  css += ".fb-panel-segment{flex:none;display:flex;gap:14px;margin:0 16px 8px;border-bottom:1px solid #e2e8f0;}";
+  css += ".fb-panel .fb-panel-segment button{flex:none;min-height:34px;padding:4px 2px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--pfb-muted);font:600 14px/1.4 system-ui;box-shadow:none;text-transform:none;}.fb-panel .fb-panel-segment button:hover{color:var(--pfb-ink);}";
+  css += ".fb-panel .fb-panel-segment button[aria-pressed=true]{border-bottom-color:var(--pfb-accent);color:var(--pfb-ink);}";
   css += ".fb-panel-filters{flex:none;display:flex;gap:7px;padding:0 16px 8px;}";
   css += ".fb-panel-filters select,.fb-panel-filters input{min-width:0;margin:0;height:32px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;color:#40536d;font:400 14px system-ui;}";
-  css += ".fb-panel-filters select{width:40%;}.fb-panel-filters input{flex:1;}";
+  css += ".fb-panel-filters select{width:auto;max-width:43%;}.fb-panel-filters input{flex:1;}";
   css += ".fb-panel :focus-visible{outline:2px solid var(--pfb-accent);outline-offset:2px;}";
   css += ".fb-panel-list{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 16px 6px;}";
   css += ".fb-panel-foot{border-top:1px solid #e4e9f2;padding-block:8px;}";
@@ -589,7 +589,6 @@
   css += "dialog.fb-image-dialog{box-sizing:border-box;width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:10px;border:1px solid #dbe3ed;border-radius:12px;background:#fff;color:#1e293b;font:600 14px system-ui;overflow:auto;}dialog.fb-image-dialog::backdrop{background:#0f172ad9;}";
   css += ".fb-image-dialog-head,.fb-image-dialog-controls{display:flex;align-items:center;justify-content:space-between;gap:6px;}.fb-image-dialog-controls[hidden]{display:none;}.fb-image-dialog img{display:block;width:100%;max-height:min(72vh,620px);max-height:min(72dvh,620px);margin:8px 0;object-fit:contain;background:#f1f5f9;border-radius:8px;}";
   css += "dialog.fb-image-dialog button{padding:4px 8px;min-height:28px;border:1px solid #dbe3ed;border-radius:7px;background:#fff;color:#334155;font:700 14px system-ui;box-shadow:none;cursor:pointer;}dialog.fb-image-dialog button:disabled{opacity:.45;}dialog.fb-image-dialog button[data-image-remove]{color:#b91c1c;}";
-  css += ".fb-edit-toolbar .fb-attach-btn{position:relative;padding:4px 8px;min-height:28px;display:inline-flex;align-items:center;border:1px dashed #cbd5e1;border-radius:7px;background:#f8fafc;color:#334155;font:700 14px system-ui;cursor:pointer;}.fb-edit-toolbar .fb-edit-file{position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-edit-toolbar .fb-attach-btn:focus-within{outline:2px solid #2563eb;}";
   css += ".fb-item-number,.fb-item-date{color:#64748b;font-size:14px;}.fb-item-date{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums;}";
   css += ".fb-item .fb-item-note{margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:#1c2b44;}";
   css += ".fb-item-actions{flex:none;display:flex;gap:3px;}.fb-panel .fb-item-actions button{display:grid;place-items:center;width:28px;height:28px;margin:0;padding:0;border:0;border-radius:8px;background:transparent;color:#475569;box-shadow:none;cursor:pointer;}.fb-panel .fb-item-actions button:hover{background:#f1f5f9;color:#1e293b;}.fb-panel .fb-item-actions button[data-fb-delete]{color:#b91c1c;}.fb-panel .fb-item-actions button[data-fb-delete]:hover{background:#fef2f2;color:#991b1b;}.fb-item-actions svg{width:16px;height:16px;}";
@@ -598,11 +597,12 @@
   css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
   css += "@media(max-height:430px){.fb-panel{max-height:calc(100vh - 94px);max-height:calc(100dvh - 94px);overflow:auto;overscroll-behavior:contain;}.fb-panel-list{flex:none;overflow:visible;}}";
   css += "@media(max-width:420px){.fb-panel-head .fb-actions,.fb-panel-heading{gap:4px;}.fb-panel .fb-add-label{display:none;}.fb-panel button.fb-add{padding:0;width:28px;height:28px;}.fb-panel button.fb-panel-icon,.fb-panel-options summary{width:30px;}}";
-  css += ".fb-item.fb-item-editing{background:#f8fafc;border-radius:8px;padding-inline:8px;}";
-  css += ".fb-item .fb-edit-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:8px;}.fb-edit-actions{display:flex;gap:6px;margin-left:auto;}";
-  css += ".fb-panel .fb-edit-actions>button{box-sizing:border-box;min-height:28px;margin:0;padding:3px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:700 14px/1.3 system-ui,sans-serif;box-shadow:none;text-transform:none;}.fb-panel .fb-edit-actions>button:hover{background:#f1f5f9;color:#1e293b;}";
-  css += ".fb-panel .fb-edit-actions>button[data-fb-edit-save]{background:var(--pfb-accent);border-color:var(--pfb-accent);color:#fff;}.fb-panel .fb-edit-actions>button[data-fb-edit-save]:hover{background:var(--pfb-accent-hover);border-color:var(--pfb-accent-hover);color:#fff;}";
-  css += ".fb-panel .fb-item .fb-edit-ta{width:100%;box-sizing:border-box;min-height:60px;margin-top:.3rem;padding:.45rem .55rem;border:1px solid #d5dce8;border-radius:8px;font:inherit;resize:vertical;}";
+  css += ".fb-edit-composer{margin:5px 0 2px;border:1px solid #cbd5e1;border-radius:10px;background:var(--pfb-surface);}.fb-edit-composer:focus-within{border-color:var(--pfb-accent);box-shadow:0 0 0 2px #dc262618;}";
+  css += ".fb-item .fb-edit-toolbar{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:3px 5px;border-top:1px solid #e2e8f0;}.fb-edit-actions{display:flex;gap:3px;}.fb-panel .fb-edit-composer .fb-item-file,.fb-edit-composer>.fb-file-chip{margin:4px 8px;}";
+  css += ".fb-panel .fb-edit-composer :is(.fb-attach-btn,button){position:relative;box-sizing:border-box;display:grid;place-items:center;width:32px;height:32px;margin:0;padding:0;border:0;border-radius:8px;background:transparent;color:var(--pfb-muted);box-shadow:none;}.fb-panel .fb-edit-composer :is(.fb-attach-btn,button):hover{background:var(--pfb-soft);color:var(--pfb-ink);}.fb-edit-toolbar svg{width:17px;height:17px;}";
+  css += ".fb-panel .fb-edit-composer button[data-fb-edit-save]{border-radius:50%;background:var(--pfb-accent);color:#fff;}.fb-panel .fb-edit-composer button[data-fb-edit-save]:hover{background:var(--pfb-accent-hover);color:#fff;}";
+  css += ".fb-edit-toolbar .fb-edit-file{position:absolute;width:1px;height:1px;opacity:0;padding:0;}.fb-edit-toolbar .fb-attach-btn:focus-within{outline:2px solid var(--pfb-accent);}";
+  css += ".fb-panel .fb-item .fb-edit-ta{display:block;box-sizing:border-box;width:100%;min-height:58px;margin:0;padding:8px 9px;border:0;border-radius:inherit;background:transparent;color:var(--pfb-ink);font:inherit;resize:vertical;}.fb-panel .fb-item .fb-edit-ta:focus{outline:none;}";
   css += ".fb-empty{padding:.65rem .55rem;color:#8a94a6;}";
   css += ".fb-attach{display:flex;flex-direction:column;gap:.4rem;margin-top:.55rem;}";
   css += ".fb-attach-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}";
@@ -624,10 +624,10 @@
   css += ".fb-file-chip .fb-file-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}";
   css += ".fb-file-chip .fb-remove-img{position:static;margin-left:auto;}";
   css += ".fb-item .fb-item-file{display:flex;margin:.15rem 0 .35rem;}.fb-panel .fb-file-chip{font-size:14px;max-width:100%;}.fb-panel .fb-file-icon{width:2rem;height:1.55rem;font-size:14px;line-height:1.55rem;}.fb-panel .fb-remove-img{font-size:14px;}";
-  css += ".fb-status{display:inline-block;padding:1px 6px;border-radius:999px;font:700 14px/1.2 system-ui,sans-serif;text-transform:uppercase;white-space:nowrap;}";
-  css += ".fb-status-open{background:#e6f8ef;color:#087453;}";
-  css += ".fb-status-done{background:#eef1f5;color:#475569;}";
-  css += ".fb-status-needs{background:#fff4d6;color:#9a6b00;}";
+  css += ".fb-status{display:inline-flex;align-items:center;gap:5px;font:600 14px/1.2 system-ui,sans-serif;white-space:nowrap;}.fb-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}";
+  css += ".fb-status-open{color:#087453;}";
+  css += ".fb-status-done{color:#475569;}";
+  css += ".fb-status-needs{color:#8a5700;}";
   css += ".fb-item.fb-done .fb-item-note{color:#8a94a6;}";
   css += ".fb-item.fb-needs{background:var(--pfb-surface);}";
   css += ".fb-item .fb-item-res{margin:0 0 .35rem;padding:.35rem .5rem;background:#f4f9f5;border-radius:7px;font-size:14px;color:#1d8843;}";
@@ -1396,10 +1396,10 @@
     var list = panel.querySelector(".fb-panel-list");
     var scrollTop = list ? list.scrollTop : 0;
     panel.innerHTML = head + ipBar +
-      '<div class="fb-panel-filters"><select aria-label="Filter by status" data-fb-status>' +
+      '<div class="fb-panel-filters"><input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search>' +
+      '<select aria-label="Filter by status" data-fb-status>' +
       '<option value="">All statuses</option><option value="open">Open</option>' +
-      '<option value="needs_info">Needs reply</option><option value="done">Resolved</option></select>' +
-      '<input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search></div>' +
+      '<option value="needs_info">Needs reply</option><option value="done">Resolved</option></select></div>' +
       '<div class="fb-panel-list"></div><div class="fb-panel-foot">' +
       '<span class="fb-panel-save-status" role="status" aria-atomic="true"></span><span data-fb-save-slot></span></div>';
     panel.querySelector("[data-fb-save-slot]").appendChild(saveBtn);
@@ -1473,7 +1473,7 @@
               : needs
                 ? "fb-status-needs"
                 : "fb-status-open";
-            var statusLabel = done ? "Resolved" : needs ? "? Needs reply" : "Open";
+            var statusLabel = done ? "Resolved" : needs ? "Needs reply" : "Open";
             var isCurEditing = editingId !== null && editingId === e.id;
             var id = escapePanelHtml(e.id);
             var number = scopedEntries.indexOf(e) + 1;
@@ -1511,7 +1511,7 @@
                           String(e.question).replace(/</g, "&lt;") +
                           "</div>"
                         : "") +
-                      '<textarea class="fb-edit-ta" placeholder="' +
+                      '<div class="fb-edit-composer"><textarea class="fb-edit-ta" rows="2" aria-label="Edit feedback" placeholder="' +
                       (needs
                         ? "Reply here with more detail…"
                         : "Update your note…") +
@@ -1526,11 +1526,14 @@
                           });
                         })
                         .join("") +
-                      '<div class="fb-edit-toolbar"><label class="fb-attach-btn" title="Images and documents, up to 8 MB each">＋ Attach files' +
-                      '<input type="file" accept="' + FILE_ACCEPT + '" multiple class="fb-edit-file"></label>' +
-                      '<div class="fb-edit-actions"><button type="button" data-fb-edit-cancel>Cancel</button>' +
-                      '<button type="button" data-fb-edit-save="' + id + '">' +
-                      (needs ? "Send reply" : "Save") + "</button></div></div>"
+                      '<div class="fb-edit-toolbar"><label class="fb-attach-btn" title="Attach files">' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m9 13 6-6a3 3 0 0 1 4 4l-8 8a5 5 0 0 1-7-7l8-8"/></svg>' +
+                      '<input type="file" aria-label="Attach files" accept="' + FILE_ACCEPT + '" multiple class="fb-edit-file"></label>' +
+                      '<div class="fb-edit-actions"><button type="button" aria-label="Cancel" title="Cancel" data-fb-edit-cancel>' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>' +
+                      '<button type="button" data-fb-edit-save="' + id + '" title="' + (needs ? "Send reply" : "Save edit") +
+                      '" aria-label="' + (needs ? "Send reply" : "Save edit") + '" aria-keyshortcuts="Control+Enter Meta+Enter">' +
+                      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div></div>'
                     );
                   })()
                 : '<div class="fb-item-note">' +
@@ -1665,8 +1668,15 @@
     dialog.showModal();
   }
 
+  panel.addEventListener("keydown", function (event) {
+    if (!event.target.classList.contains("fb-edit-ta") || event.key !== "Enter" ||
+        !(event.ctrlKey || event.metaKey) || event.isComposing) return;
+    event.preventDefault();
+    event.target.closest(".fb-edit-composer").querySelector("[data-fb-edit-save]").click();
+  });
+
   panel.addEventListener("click", function (e) {
-    var t = e.target.closest(".fb-item-actions button") || e.target;
+    var t = e.target.closest(".fb-item-actions button,.fb-edit-actions button") || e.target;
     var locate = t.closest("[data-fb-locate]");
     if (locate) {
       var entry = load()[findEntryIndex(locate.getAttribute("data-fb-locate"))];
