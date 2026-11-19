@@ -115,6 +115,7 @@
   function save(entries) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     localStorage.setItem(DIRTY_KEY, "1");
+    setPanelSaveStatus("Draft saved in this browser.");
     renderBadge();
     renderMarkers();
     renderSaveButton();
@@ -557,7 +558,7 @@
   css += ".fb-panel button.fb-panel-icon{border:0;background:transparent;color:#576982;border-radius:10px;width:28px;height:28px;padding:0;font:600 18px/1 system-ui;cursor:pointer;}";
   css += ".fb-panel button.fb-panel-icon:hover{background:#eef4ff;color:#1d4ed8;}";
   css += ".fb-panel button.fb-add{min-height:28px;padding:4px 8px;border:0;border-radius:10px;background:#2563eb;color:#fff;font:700 14px/1.4 system-ui;cursor:pointer;}";
-  css += ".fb-panel-foot{color:#64748b;font-size:14px;overflow-wrap:anywhere;}";
+  css += ".fb-panel-foot{color:#475569;font-size:14px;overflow-wrap:anywhere;}.fb-panel-save-status{min-width:0;}.fb-panel-save-status[data-kind=success]{color:#166534;}.fb-panel-save-status[data-kind=error]{color:#b91c1c;}";
   css += ".fb-panel-segment{flex:none;display:flex;gap:3px;padding:3px;margin:0 16px 8px;border-radius:12px;background:#f1f5fa;}";
   css += ".fb-panel-segment button{flex:1;background:transparent;border:0;border-radius:9px;padding:6px 4px;color:#52647d;font:700 14px/1.4 system-ui;cursor:pointer;}";
   css += ".fb-panel-segment button[aria-pressed=true]{background:#fff;color:#1e293b;box-shadow:0 2px 8px #10294d12;}";
@@ -1011,7 +1012,7 @@
   if (!ALLOW_NEW_FEEDBACK) modeStatus.title = "Adding feedback is disabled";
 
   function updateInspectGuide() {
-    var visible = ALLOW_NEW_FEEDBACK && !formEl && !panel.classList.contains("fb-open");
+    var visible = ALLOW_NEW_FEEDBACK && !formEl && (mode || !panel.classList.contains("fb-open"));
     var message = mode
       ? "Right-click anywhere to turn off Feedback."
       : "Click to select an element and leave feedback.";
@@ -1028,12 +1029,25 @@
     setMode(!mode);
   });
   newBtn.addEventListener("click", function () {
-    if (mode) setMode(false);
     openForm({ global: true });
   });
 
   var saving = false;
   var syncGeneration = 0;
+  var panelSaveStatus = null;
+
+  function renderPanelSaveStatus() {
+    var status = panel.querySelector(".fb-panel-save-status");
+    if (!status) return;
+    status.textContent = panelSaveStatus ? panelSaveStatus.message :
+      (isDirty() ? "Draft saved in this browser." : "Feedback on this page");
+    status.dataset.kind = panelSaveStatus ? panelSaveStatus.kind : "";
+  }
+
+  function setPanelSaveStatus(message, kind) {
+    panelSaveStatus = { message: message, kind: kind || "" };
+    renderPanelSaveStatus();
+  }
 
   /* Dirty → Save feedback; clean → Resave (always available for the client) */
   function renderSaveButton() {
@@ -1078,15 +1092,14 @@
   function submitFinal() {
     if (saving) return;
     if (!LOGGED_IN) {
-      showToast("🔒 Login required: Please log in to save your feedback.", "err");
-      showLoginWarningBanner();
+      setPanelSaveStatus("Log in to save changes to the server.");
       renderSaveButton();
       return;
     }
     var entries = load();
     var deletedIds = loadDeleted();
     if (!entries.length && !deletedIds.length) {
-      showToast("No feedback to save yet.", "err");
+      setPanelSaveStatus("No feedback to save yet.");
       renderSaveButton();
       return;
     }
@@ -1095,36 +1108,24 @@
     saveBtn.disabled = true;
     saveBtn.classList.remove("fb-ok", "fb-err", "fb-dirty");
     saveBtn.textContent = "Saving…";
+    setPanelSaveStatus("Saving to server…");
     syncToServer(entries, function (ok, info) {
       saving = false;
       if (ok) {
         refreshFeedbackView();
         if (info && info.newerDraft) {
-          showToast("Saved earlier changes. Newer changes still need to be saved.", "ok");
+          setPanelSaveStatus("Earlier changes saved. Newer changes are still local.");
           return;
         }
         saveBtn.classList.add("fb-ok");
         saveBtn.textContent = "Saved ✓";
-        var msg =
-          "Saved " +
-          (info && info.count != null ? info.count : entries.length) +
-          " note(s) to " +
-          ((info && info.file) || ("feedback/" + PAGE_SLUG + ".json"));
-        if (info && info.verified) {
-          msg += " — verified on server.";
-        } else {
-          msg += " — server confirmed.";
-        }
-        showToast(msg, "ok");
+        setPanelSaveStatus("Saved to server.", "success");
         setTimeout(renderSaveButton, 2200);
       } else {
         saveBtn.classList.add("fb-err");
         saveBtn.disabled = false;
         saveBtn.textContent = "Save failed — retry";
-        showToast(
-          "Save failed: " + ((info && info.error) || "unknown error") + " Click Resave.",
-          "err"
-        );
+        setPanelSaveStatus("Could not save to server. Your changes are still local.", "error");
         setTimeout(renderSaveButton, 3200);
       }
     });
@@ -1388,10 +1389,10 @@
       '<option value="">All statuses</option><option value="open">Open</option>' +
       '<option value="needs_info">Needs reply</option><option value="done">Resolved</option></select>' +
       '<input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search></div>' +
-      '<div class="fb-panel-list"></div><div class="fb-panel-foot"><span>' +
-      (isDirty() ? "Unsaved changes" : "Feedback on this page") +
-      '</span><span data-fb-save-slot></span></div>';
+      '<div class="fb-panel-list"></div><div class="fb-panel-foot">' +
+      '<span class="fb-panel-save-status" role="status" aria-atomic="true"></span><span data-fb-save-slot></span></div>';
     panel.querySelector("[data-fb-save-slot]").appendChild(saveBtn);
+    renderPanelSaveStatus();
     panel.querySelector("[data-fb-search]").value = panelQuery;
     panel.querySelector("[data-fb-status]").value = panelStatus;
     renderPanelList(allEntries);
@@ -1663,8 +1664,7 @@
         showToast("This element is no longer visible on the page.", "err");
         return;
       }
-      if (mode) setMode(false);
-      else closePanel();
+      closePanel();
       target.scrollIntoView({
         block: "center",
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
@@ -1680,7 +1680,6 @@
       return;
     }
     if (t.closest("[data-fb-add]")) {
-      if (mode) setMode(false);
       openForm({ global: true });
       return;
     }
@@ -2351,8 +2350,7 @@
         alert("Storage is full — Export JSON first, or delete some notes.");
         return;
       }
-      if (mode) setMode(false);
-      else removeForm();
+      removeForm();
       panelQuery = "";
       panelStatus = "";
       openPanel();
@@ -2368,7 +2366,10 @@
       if (isUi(el)) return;
       e.preventDefault();
       e.stopPropagation();
-      if (!formEl) openForm({ el: el, pointer: e.detail > 0 ? { x: e.clientX, y: e.clientY } : null });
+      if (!formEl) {
+        closePanel();
+        openForm({ el: el, pointer: e.detail > 0 ? { x: e.clientX, y: e.clientY } : null });
+      }
     },
     true
   );
