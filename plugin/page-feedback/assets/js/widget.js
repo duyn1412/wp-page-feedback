@@ -497,6 +497,8 @@
   css += ".fb-dock button.fb-tool{cursor:pointer;}.fb-dock button.fb-tool:disabled{opacity:.48;cursor:default;}";
   css += ".fb-dock button.fb-tool:hover:not(:disabled),.fb-dock .fb-toggle,.fb-dock button[aria-pressed=true]{background:#ffffff22;color:#fff;}";
   css += ".fb-dock button:focus-visible{outline:2px solid #a7c7ff;outline-offset:1px;}";
+  css += ".fb-dock .fb-count{display:grid;place-items:center;min-width:19px;padding:1px 4px;border-radius:5px;font-variant-numeric:tabular-nums;}.fb-dock .fb-count.fb-count-new{background:#fee2e2;color:#991b1b;}";
+  css += "@keyframes fbNewCount{0%,100%{transform:scale(1);}45%{transform:scale(1.22);}}@media(prefers-reduced-motion:no-preference){.fb-dock .fb-count.fb-count-new{animation:fbNewCount .4s ease-out 2;}}";
   css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
   css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
   css += "@media(max-width:560px){.fb-dock{bottom:9px;right:8px;max-width:calc(100vw - 16px);}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
@@ -1171,10 +1173,18 @@
   panel.setAttribute("data-fb-ui", "");
   document.body.appendChild(panel);
 
+  var feedbackCount = toggle.querySelector(".fb-count");
+
   function renderBadge() {
     var count = load().length;
-    toggle.querySelector(".fb-count").textContent = count;
+    feedbackCount.textContent = count;
     toggle.title = "Open feedback inspector · " + count + " notes";
+  }
+
+  function highlightNewFeedback() {
+    feedbackCount.classList.remove("fb-count-new");
+    void feedbackCount.offsetWidth;
+    feedbackCount.classList.add("fb-count-new");
   }
 
   /* ---------- markers ---------- */
@@ -1298,6 +1308,7 @@
 
   /* ---------- panel ---------- */
   function openPanel() {
+    feedbackCount.classList.remove("fb-count-new");
     captureDraftNote();
     renderPanel();
     panel.classList.add("fb-open");
@@ -2156,6 +2167,7 @@
       showToast("Adding new notes is paused on this site.", "err");
       return;
     }
+    closePanel();
     removeForm();
     removeHover();
 
@@ -2457,7 +2469,8 @@
       removeForm();
       panelQuery = "";
       panelStatus = "";
-      openPanel();
+      if (panel.classList.contains("fb-open")) renderPanel();
+      highlightNewFeedback();
     });
   }
 
@@ -2511,7 +2524,6 @@
       inspectTapTimer = window.setTimeout(function () {
         resetInspectTap();
         if (mode && !ui && !formEl && el.isConnected) {
-          closePanel();
           openForm({ el: el, pointer: { x: event.clientX, y: event.clientY } });
         }
       }, doubleTapDelay);
@@ -2520,7 +2532,6 @@
     event.preventDefault();
     event.stopPropagation();
     if (!touch && !formEl) {
-      closePanel();
       openForm({
         el: el,
         pointer: event.detail > 0 ? { x: event.clientX, y: event.clientY } : null
