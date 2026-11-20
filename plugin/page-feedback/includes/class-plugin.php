@@ -92,12 +92,26 @@ final class PFB_Plugin {
       true
     );
 
+    wp_enqueue_style(
+      'pfb-figui3',
+      PFB_URL . 'assets/vendor/figui3/panel.css',
+      [],
+      PFB_VERSION
+    );
+    wp_enqueue_script(
+      'pfb-figui3',
+      PFB_URL . 'assets/vendor/figui3/panel.min.js',
+      [],
+      PFB_VERSION,
+      true
+    );
+
     $widget_file = PFB_DIR . 'assets/js/widget.js';
     $widget_ver = file_exists($widget_file) ? PFB_VERSION . '.' . filemtime($widget_file) : PFB_VERSION;
     wp_enqueue_script(
       'pfb-widget',
       PFB_URL . 'assets/js/widget.js',
-      ['pfb-html2canvas'],
+      ['pfb-html2canvas', 'pfb-figui3'],
       $widget_ver,
       true
     );

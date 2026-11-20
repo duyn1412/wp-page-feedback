@@ -530,7 +530,7 @@
   css += ".fb-form.fb-form-global{width:400px;}";
   css += ".fb-form,.fb-panel{--pfb-accent:#dc2626;--pfb-accent-hover:#b91c1c;--pfb-surface:#fff;--pfb-soft:#f4f4f5;--pfb-ink:#18181b;--pfb-muted:#52525b;--pfb-line:#e4e4e7;--pfb-hover:#ececef;--pfb-control-radius:6px;--pfb-control-size:28px;}";
   css += "body.fb-mode{touch-action:manipulation;}body.fb-mode,body.fb-mode *{cursor:crosshair!important;}body.fb-mode [data-fb-ui],body.fb-mode [data-fb-ui] *{cursor:auto!important;}";
-  css += "[data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),button[data-fb-ui]:not(:disabled),body.fb-mode [data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),body.fb-mode button[data-fb-ui]:not(:disabled){cursor:pointer!important;}";
+  css += "[data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),button[data-fb-ui]:not(:disabled),body.fb-mode [data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),body.fb-mode button[data-fb-ui]:not(:disabled),body.fb-mode .fb-panel :is(fig-button,fig-menu-item){cursor:pointer!important;}";
   css += "body.fb-mode [data-fb-ui] :is(button,a,summary,label) :not(input){cursor:inherit!important;}[data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}body.fb-mode [data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
@@ -1369,22 +1369,64 @@
     }
   }
 
+  function panelUsesFigUI() {
+    return !!window.customElements && !!customElements.get("fig-menu") &&
+      getComputedStyle(panel).getPropertyValue("--pfb-figui-ready").trim() === "1";
+  }
+
+  var panelIconPaths = {
+    add: '<path d="M12 5v14M5 12h14"/>',
+    close: '<path d="m6 6 12 12M18 6 6 18"/>',
+    options: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    locate: '<circle cx="12" cy="12" r="6"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>',
+    images: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><path d="m3 17 5-5 4 4 4-4 5 5"/>'
+  };
+
+  function panelIcon(path) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
+  }
+
+  function panelIconButton(useFig, label, attrs, icon, variant, count) {
+    if (!useFig) {
+      return '<button type="button" ' + attrs + ' aria-label="' + label + '" title="' + label + '">' +
+        panelIcon(icon) + (count || "") + '</button>';
+    }
+    return '<fig-tooltip text="' + label + '"><fig-button ' + (count ? '' : 'icon ') +
+      'variant="' + (variant || "ghost") + '" ' + attrs + ' aria-label="' + label + '">' +
+      panelIcon(icon) + (count || "") + '</fig-button></fig-tooltip>';
+  }
+
+  function renderPanelOptions(useFig, hasEntries) {
+    var options = [["export", "Export JSON"], ["reload", "Reload server"], ["copy", "Copy JSON"]];
+    if (hasEntries) options.push(["clear-all", "Clear all"]);
+    if (useFig) {
+      return '<fig-menu position="bottom right" class="fb-panel-options">' +
+        '<fig-button fig-menu-trigger icon variant="ghost" aria-label="Feedback options" title="Feedback options">' +
+        panelIcon(panelIconPaths.options) + '</fig-button>' +
+        options.map(function (option) {
+          return '<fig-menu-item value="' + option[0] + '" data-fb-' + option[0] + '>' + option[1] + '</fig-menu-item>';
+        }).join("") + '</fig-menu>';
+    }
+    return '<details class="fb-panel-options"><summary aria-label="Feedback options" title="Feedback options">⚙</summary>' +
+      '<div class="fb-panel-menu">' + options.map(function (option) {
+        return '<button type="button" data-fb-' + option[0] + '>' + option[1] + '</button>';
+      }).join("") + '</div></details>';
+  }
+
   function renderPanel() {
     var allEntries = load();
     var allIps = getAllIps(allEntries);
     var myCount = allEntries.filter(function (entry) {
       return !entry.ip || entry.ip === CURRENT_IP;
     }).length;
+    var useFig = panelUsesFigUI();
     var head =
-      '<div class="fb-panel-head"><div class="fb-panel-heading">' +
-      "<strong>Feedback</strong>" +
+      '<div class="fb-panel-head"><div class="fb-panel-heading"><strong>Feedback</strong>' +
       '<span class="fb-panel-count" aria-live="polite"></span></div><div class="fb-actions">' +
-      (ALLOW_NEW_FEEDBACK ? '<button type="button" class="fb-add" data-fb-add aria-label="Add feedback" title="Add feedback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' : "") +
-      '<details class="fb-panel-options"><summary aria-label="Feedback options" title="Feedback options">⚙</summary>' +
-      '<div class="fb-panel-menu"><button type="button" data-fb-export>Export JSON</button><button type="button" data-fb-reload>Reload server</button>' +
-      '<button type="button" data-fb-copy>Copy JSON</button>' +
-      (allEntries.length ? '<button type="button" data-fb-clear-all>Clear all</button>' : "") +
-      '</div></details><button type="button" class="fb-panel-icon" data-fb-close aria-label="Close feedback" title="Close feedback">×</button></div></div>';
+      (ALLOW_NEW_FEEDBACK ? panelIconButton(useFig, "Add feedback", 'class="fb-add" data-fb-add', panelIconPaths.add, "primary") : "") +
+      renderPanelOptions(useFig, allEntries.length > 0) +
+      panelIconButton(useFig, "Close feedback", 'class="fb-panel-icon" data-fb-close', panelIconPaths.close) +
+      '</div></div>';
     var ipBar = "";
     if (CURRENT_IP) {
       ipBar = '<div class="fb-panel-segment" role="group" aria-label="Feedback scope">' +
@@ -1424,11 +1466,9 @@
     });
   }
 
-  function renderLocateButton(entry, id) {
+  function renderLocateButton(entry, id, useFig) {
     if (entry.scope === "global" || entry.selector === "(global)" || !entry.selector) return "";
-    return '<button type="button" class="fb-item-context" data-fb-locate="' + id +
-      '" aria-label="Locate on page" title="Locate on page">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="6"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg></button>';
+    return panelIconButton(useFig, "Locate on page", 'class="fb-item-context" data-fb-locate="' + id + '"', panelIconPaths.locate);
   }
 
   var feedbackDateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -1453,14 +1493,13 @@
     delete: '<path d="M4 7h16m-10 0V4h4v3m4 0-1 13H7L6 7m4 4v5m4-5v5"/>'
   };
 
-  function renderFeedbackAction(action, label, id) {
-    return '<button type="button" data-fb-' + action + '="' + id +
-      '" aria-label="' + label + '" title="' + label + '">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-      feedbackActionIcons[action] + '</svg></button>';
+  function renderFeedbackAction(action, label, id, useFig) {
+    return panelIconButton(useFig, label, 'data-fb-' + action + '="' + id + '"', feedbackActionIcons[action],
+      action === "delete" ? "destructiveGhost" : "ghost");
   }
 
   function renderPanelList(allEntries) {
+    var useFig = panelUsesFigUI();
     var query = panelQuery.trim().toLowerCase();
     var scopedEntries = getFilteredEntries(allEntries);
     var visibleEntries = scopedEntries.filter(function (entry) {
@@ -1498,12 +1537,11 @@
               '<div class="fb-item-heading"><span class="fb-status ' + statusClass + '">' + statusLabel + '</span>' +
               (e.scope === "global" || e.selector === "(global)" ? '<span class="fb-item-scope">· Page-wide</span>' : "") +
               renderFeedbackDate(e) +
-              (imageCount ? '<button type="button" class="fb-image-button" aria-label="View ' + imageCount +
-                (imageCount === 1 ? ' image' : ' images') + '" data-fb-images="' + id + '">' +
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1"/><path d="m3 17 5-5 4 4 4-4 5 5"/></svg>' +
-                imageCount + '</button>' : "") + renderLocateButton(e, id) + '</div></div>' +
+              (imageCount ? panelIconButton(useFig, "View " + imageCount + (imageCount === 1 ? " image" : " images"),
+                'class="fb-image-button" data-fb-images="' + id + '"', panelIconPaths.images, "ghost", imageCount) : "") +
+              renderLocateButton(e, id, useFig) + '</div></div>' +
               (isCurEditing ? "" : '<div class="fb-item-actions">' +
-                renderFeedbackAction(action, actionLabel, id) + renderFeedbackAction("delete", "Delete", id) +
+                renderFeedbackAction(action, actionLabel, id, useFig) + renderFeedbackAction("delete", "Delete", id, useFig) +
                 '</div>') + "</div>" +
               (isCurEditing
                 ? (function () {
@@ -1682,8 +1720,17 @@
     event.target.closest(".fb-edit-composer").querySelector("[data-fb-edit-save]").click();
   });
 
-  panel.addEventListener("click", function (e) {
-    var t = e.target.closest(".fb-item-actions button,.fb-edit-actions button") || e.target;
+  panel.addEventListener("click", function (event) {
+    handlePanelAction(event.target.closest("button,fig-button") || event.target);
+  });
+  panel.addEventListener("change", function (event) {
+    var item = event.detail && event.detail.item;
+    if (event.target.matches("fig-menu.fb-panel-options") && item && item.parentElement === event.target) {
+      handlePanelAction(item);
+    }
+  });
+
+  function handlePanelAction(t) {
     var locate = t.closest("[data-fb-locate]");
     if (locate) {
       var entry = load()[findEntryIndex(locate.getAttribute("data-fb-locate"))];
@@ -1885,11 +1932,11 @@
       navigator.clipboard.writeText(JSON.stringify(load(), null, 2)).then(function () {
         t.textContent = "Copied!";
         setTimeout(function () {
-          t.textContent = "Copy";
+          t.textContent = "Copy JSON";
         }, 1200);
       });
     }
-  });
+  }
 
   /* Append an attachment to the entry being edited (draft only until Save) */
   function addDraftAttachment(att) {
@@ -2482,7 +2529,7 @@
   }, true);
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && !e.defaultPrevented) {
       if (mode) setMode(false);
       else {
         removeForm();
