@@ -15,10 +15,24 @@ class PFB_REST {
   }
 
   public static function is_guest_allowed() {
-    return (bool) get_option('pfb_allow_guest', false);
+    return true;
   }
 
   public static function can_read(WP_REST_Request $request = null) {
+    if (self::is_guest_allowed()) {
+      return true;
+    }
+    return current_user_can('manage_options');
+  }
+
+  public static function can_sync(WP_REST_Request $request = null) {
+    if (self::is_guest_allowed()) {
+      return true;
+    }
+    return current_user_can('manage_options');
+  }
+
+  public static function can_manage_notes(WP_REST_Request $request = null) {
     return current_user_can('manage_options');
   }
 
@@ -77,7 +91,7 @@ class PFB_REST {
       ],
       [
         'methods' => 'POST',
-        'permission_callback' => [self::class, 'can_write'],
+        'permission_callback' => [self::class, 'can_manage_notes'],
         'callback' => static function (WP_REST_Request $request) {
           $id = (string) $request['id'];
           $result = PFB_Notes::update_agent_fields($id, [
@@ -96,7 +110,7 @@ class PFB_REST {
     register_rest_route('pfb/v1', '/sync', [
       [
         'methods' => 'POST',
-        'permission_callback' => [self::class, 'can_write'],
+        'permission_callback' => [self::class, 'can_sync'],
         'callback' => static function (WP_REST_Request $request) {
           $data = $request->get_json_params();
           if (!is_array($data)) {

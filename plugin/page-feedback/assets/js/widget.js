@@ -1146,6 +1146,7 @@
         saveBtn.classList.add("fb-ok");
         saveBtn.textContent = "Saved ✓";
         setPanelSaveStatus("Saved to server.", "success");
+        showToast("Feedback saved ✓", "ok");
         setTimeout(renderSaveButton, 2200);
       } else {
         saveBtn.classList.add("fb-err");
@@ -1939,6 +1940,7 @@
       }
       stopEdit();
       renderPanel();
+      submitFinal();
     }
     if (t.hasAttribute("data-fb-reopen")) {
       var list = load();
@@ -2516,6 +2518,7 @@
       panelStatus = "";
       if (panel.classList.contains("fb-open")) renderPanel();
       highlightNewFeedback();
+      submitFinal();
     });
   }
 

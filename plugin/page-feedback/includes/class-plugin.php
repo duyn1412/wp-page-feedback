@@ -119,9 +119,9 @@ final class PFB_Plugin {
     $client_ip = PFB_Notes::get_client_ip();
     wp_localize_script('pfb-widget', 'PFB', [
       'allowNew' => $can_add ? '1' : '0',
-      'requireLogin' => '1',
-      'loggedIn' => $logged_in ? '1' : '0',
-      'isAdmin' => '1',
+      'requireLogin' => '0',
+      'loggedIn' => '1',
+      'isAdmin' => current_user_can('manage_options') ? '1' : '0',
       'clientIp' => $client_ip,
       'loginUrl' => wp_login_url($redirect),
       'nonce' => wp_create_nonce('wp_rest'),
