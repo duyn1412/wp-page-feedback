@@ -529,7 +529,7 @@
   css += ".fb-toast.fb-err{background:#e04545;}";
   css += ".fb-form.fb-form-global{width:400px;}";
   css += ".fb-form,.fb-panel{--pfb-accent:#dc2626;--pfb-accent-hover:#b91c1c;--pfb-surface:#fff;--pfb-soft:#f4f4f5;--pfb-ink:#18181b;--pfb-muted:#52525b;--pfb-line:#e4e4e7;--pfb-hover:#ececef;--pfb-control-radius:6px;--pfb-control-size:28px;}";
-  css += "body.fb-mode,body.fb-mode *{cursor:crosshair!important;}body.fb-mode [data-fb-ui],body.fb-mode [data-fb-ui] *{cursor:auto!important;}";
+  css += "body.fb-mode{touch-action:manipulation;}body.fb-mode,body.fb-mode *{cursor:crosshair!important;}body.fb-mode [data-fb-ui],body.fb-mode [data-fb-ui] *{cursor:auto!important;}";
   css += "[data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),button[data-fb-ui]:not(:disabled),body.fb-mode [data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),body.fb-mode button[data-fb-ui]:not(:disabled){cursor:pointer!important;}";
   css += "body.fb-mode [data-fb-ui] :is(button,a,summary,label) :not(input){cursor:inherit!important;}[data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}body.fb-mode [data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
@@ -943,6 +943,12 @@
 
   /* ---------- UI elements ---------- */
   var mode = false;
+  var doubleTapDelay = 300;
+  var doubleTapDistance = 32;
+  var lastTouchEnd = null;
+  var lastInspectTap = null;
+  var inspectTapTimer = null;
+  var touchFirstView = window.matchMedia("(hover: none) and (pointer: coarse)");
   var hoverBox = null;
   var formEl = null;
   var stopPositioningForm = null;
@@ -1027,7 +1033,7 @@
   function updateInspectGuide() {
     var visible = ALLOW_NEW_FEEDBACK && !formEl && (mode || !panel.classList.contains("fb-open"));
     var message = mode
-      ? "Right-click anywhere to turn off Feedback."
+      ? (touchFirstView.matches ? "Double-tap anywhere to turn off Feedback." : "Right-click anywhere to turn off Feedback.")
       : "Click to select an element and leave feedback.";
     if (inspectGuide.textContent !== message) inspectGuide.textContent = message;
     inspectGuide.hidden = !visible;
@@ -1941,6 +1947,8 @@
 
   /* ---------- feedback mode ---------- */
   function setMode(on) {
+    resetInspectTap();
+    lastTouchEnd = null;
     mode = !!on && ALLOW_NEW_FEEDBACK;
     document.body.classList.toggle("fb-mode", mode);
     inspectBtn.setAttribute("aria-pressed", String(mode));
@@ -2407,21 +2415,71 @@
   }
 
 
-  document.addEventListener(
-    "click",
-    function (e) {
-      if (!ALLOW_NEW_FEEDBACK || !mode) return;
-      var el = e.target;
-      if (isUi(el)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      if (!formEl) {
-        closePanel();
-        openForm({ el: el, pointer: e.detail > 0 ? { x: e.clientX, y: e.clientY } : null });
-      }
-    },
-    true
-  );
+  function resetInspectTap() {
+    window.clearTimeout(inspectTapTimer);
+    inspectTapTimer = null;
+    lastInspectTap = null;
+  }
+
+  function nearbyTap(point, event, distance) {
+    return Math.hypot(point.x - event.clientX, point.y - event.clientY) <= distance;
+  }
+
+  // Some touch browsers report a MouseEvent rather than a PointerEvent for click.
+  document.addEventListener("touchend", function (event) {
+    if (!mode || event.touches.length || event.changedTouches.length !== 1) return;
+    var point = event.changedTouches[0];
+    lastTouchEnd = { x: point.clientX, y: point.clientY, time: performance.now() };
+  }, { capture: true, passive: true });
+
+  window.addEventListener("scroll", function () {
+    if (lastInspectTap) resetInspectTap();
+  }, { passive: true });
+
+  function isTouchClick(event, now) {
+    if (event.pointerType) return event.pointerType === "touch";
+    if (event.sourceCapabilities) return event.sourceCapabilities.firesTouchEvents;
+    return event.detail > 0 && lastTouchEnd && now - lastTouchEnd.time <= 450 &&
+      nearbyTap(lastTouchEnd, event, 8);
+  }
+
+  document.addEventListener("click", function (event) {
+    if (!mode) return;
+    var el = event.target;
+    var ui = isUi(el);
+    var now = performance.now();
+    var touch = isTouchClick(event, now);
+    lastTouchEnd = null;
+    if (touch && lastInspectTap && now - lastInspectTap.time <= doubleTapDelay &&
+        nearbyTap(lastInspectTap, event, doubleTapDistance)) {
+      event.preventDefault();
+      event.stopPropagation();
+      setMode(false);
+      return;
+    }
+
+    resetInspectTap();
+    if (touch) {
+      lastInspectTap = { x: event.clientX, y: event.clientY, time: now };
+      inspectTapTimer = window.setTimeout(function () {
+        resetInspectTap();
+        if (mode && !ui && !formEl && el.isConnected) {
+          closePanel();
+          openForm({ el: el, pointer: { x: event.clientX, y: event.clientY } });
+        }
+      }, doubleTapDelay);
+    }
+    if (ui) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (!touch && !formEl) {
+      closePanel();
+      openForm({
+        el: el,
+        pointer: event.detail > 0 ? { x: event.clientX, y: event.clientY } : null
+      });
+    }
+  }, true);
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
@@ -2437,7 +2495,7 @@
   document.addEventListener(
     "contextmenu",
     function (e) {
-      if (e.target.closest(".fb-image-dialog")) return;
+      if (e.pointerType === "touch" || e.target.closest(".fb-image-dialog")) return;
       // Allow native contextmenu inside textarea and text inputs (for copy/paste)
       if (
         e.target &&
