@@ -1954,7 +1954,15 @@ fig-icon {
   --figma-color-bg-menu-hover: #52525b;
   --spacer-4: 28px;
   color-scheme: light;
+  font-family: var(--font-family);
+  font-weight: var(--text-body-medium-font-weight);
+  letter-spacing: var(--text-body-medium-letter-spacing);
 }
+:scope.fb-panel { font-variant-numeric: var(--font-variant-numeric); }
+:scope.fb-panel :is(button, input, select, textarea, fig-input-text, fig-dropdown, fig-segment, .fb-file-chip),
+fig-button, fig-menu-item, dialog[is="fig-popup"] { font-family: var(--font-family); }
+:scope.fb-panel :is(.fb-item-number, .fb-item-date, .fb-item-note, .fb-edit-ta, .fb-panel-save-status) { font-weight: var(--text-body-medium-font-weight); }
+:scope.fb-panel :is(.fb-panel-count, .fb-status) { font-weight: var(--text-body-strong-font-weight); }
 fig-button, fig-menu-item, fig-input-text, fig-dropdown, fig-segment { font-size: 14px; cursor: pointer; }
 fig-header.fb-panel-head { height: 42px; padding-inline: 12px; }
 fig-footer.fb-panel-foot { padding: 7px 12px; align-items: center; justify-content: space-between; border-top: 0; }
@@ -1965,7 +1973,11 @@ fig-segment { text-transform: none; cursor: pointer; }
 .fb-panel-filters fig-input-text { flex: 1; min-width: 0; }
 .fb-panel-filters fig-input-text input { font-size: 14px; }
 .fb-panel-filters fig-dropdown { width: 124px; max-width: 42%; }
-fig-header .fb-panel-heading strong { font-size: 16px; }
+fig-header .fb-panel-heading strong {
+  font-size: 16px;
+  font-weight: var(--text-heading-medium-font-weight);
+  letter-spacing: var(--text-heading-medium-letter-spacing);
+}
 fig-button > svg { width: 16px; height: 16px; pointer-events: none; }
 fig-button[data-fb-images] { gap: 4px; min-width: 28px; white-space: nowrap; }
 fig-menu::part(listbox) { min-width: 180px; }

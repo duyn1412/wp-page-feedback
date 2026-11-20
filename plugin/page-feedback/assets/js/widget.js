@@ -954,6 +954,7 @@
   var touchFirstView = window.matchMedia("(hover: none) and (pointer: coarse)");
   var hoverBox = null;
   var formEl = null;
+  var canRetargetForm = null;
   var stopPositioningForm = null;
   var markers = [];
   var loginWarningBannerEl = null;
@@ -2174,6 +2175,7 @@
   }
 
   function removeForm() {
+    canRetargetForm = null;
     if (stopPositioningForm) {
       stopPositioningForm();
       stopPositioningForm = null;
@@ -2264,6 +2266,11 @@
     var composer = formEl;
 
     var isCapturing = false;
+    var pendingAttachments = 0;
+    canRetargetForm = function (target) {
+      return !!el && target !== el && !ta.value && !attachedImages.length &&
+        !attachedFiles.length && !isCapturing && !pendingAttachments;
+    };
 
     function updateComposer() {
       var hasAttachment = attachedImages.length > 0 || attachedFiles.length > 0;
@@ -2363,10 +2370,16 @@
       }
     });
 
-    fileInput.addEventListener("change", function () {
-      Array.prototype.forEach.call(fileInput.files || [], function (file) {
-        fileToDataUrl(file, addAttachment);
+    function readComposerAttachment(file) {
+      pendingAttachments++;
+      fileToDataUrl(file, function (attachment) {
+        pendingAttachments--;
+        if (formEl === composer) addAttachment(attachment);
       });
+    }
+
+    fileInput.addEventListener("change", function () {
+      Array.prototype.forEach.call(fileInput.files || [], readComposerAttachment);
       fileInput.value = "";
     });
 
@@ -2377,7 +2390,7 @@
       for (var i = 0; i < items.length; i++) {
         if (items[i].type.indexOf("image") === 0) {
           found = true;
-          fileToDataUrl(items[i].getAsFile(), addAttachment);
+          readComposerAttachment(items[i].getAsFile());
         }
       }
       if (found) ev.preventDefault();
@@ -2403,6 +2416,7 @@
 
       var targetToCapture = el || document.body;
       captureTarget(targetToCapture, function (dataUrl) {
+        if (formEl !== composer) return;
         isCapturing = false;
         updateComposer();
         hideCaptureLoading();
@@ -2534,6 +2548,11 @@
       nearbyTap(lastTouchEnd, event, 8);
   }
 
+  function inspectFeedbackElement(el, pointer) {
+    if (!el.isConnected || (formEl && (!canRetargetForm || !canRetargetForm(el)))) return;
+    openForm({ el: el, pointer: pointer });
+  }
+
   document.addEventListener("click", function (event) {
     if (!mode) return;
     var el = event.target;
@@ -2554,19 +2573,16 @@
       lastInspectTap = { x: event.clientX, y: event.clientY, time: now };
       inspectTapTimer = window.setTimeout(function () {
         resetInspectTap();
-        if (mode && !ui && !formEl && el.isConnected) {
-          openForm({ el: el, pointer: { x: event.clientX, y: event.clientY } });
+        if (mode && !ui) {
+          inspectFeedbackElement(el, { x: event.clientX, y: event.clientY });
         }
       }, doubleTapDelay);
     }
     if (ui) return;
     event.preventDefault();
     event.stopPropagation();
-    if (!touch && !formEl) {
-      openForm({
-        el: el,
-        pointer: event.detail > 0 ? { x: event.clientX, y: event.clientY } : null
-      });
+    if (!touch) {
+      inspectFeedbackElement(el, event.detail > 0 ? { x: event.clientX, y: event.clientY } : null);
     }
   }, true);
 
