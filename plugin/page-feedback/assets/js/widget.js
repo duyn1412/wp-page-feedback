@@ -499,6 +499,7 @@
   css += ".fb-dock button:focus-visible{outline:2px solid #a7c7ff;outline-offset:1px;}";
   css += ".fb-dock .fb-count{display:grid;place-items:center;min-width:19px;padding:1px 4px;border-radius:5px;font-variant-numeric:tabular-nums;}.fb-dock .fb-count.fb-count-new{background:#fee2e2;color:#991b1b;}";
   css += "@keyframes fbNewCount{0%,100%{transform:scale(1);}45%{transform:scale(1.22);}}@media(prefers-reduced-motion:no-preference){.fb-dock .fb-count.fb-count-new{animation:fbNewCount .4s ease-out 2;}}";
+  css += ".fb-dock .fb-tool[data-fb-mode-status]{flex:0 0 62px;width:62px;padding-inline:0;justify-content:center;}";
   css += ".fb-tool-symbol{font-size:16px;line-height:1;}.fb-tool-divider{width:1px;height:24px;background:#ffffff35;}";
   css += ".fb-tool-dot{width:8px;height:8px;border-radius:50%;background:#0ccc88;}.fb-tool-dot.fb-off{background:#9cacc2;}";
   css += "@media(max-width:560px){.fb-dock{bottom:9px;right:8px;max-width:calc(100vw - 16px);}.fb-dock .fb-tool{padding:9px 8px;gap:3px;font-size:11px;}.fb-dock .fb-tool-new{display:none;}}";
@@ -518,13 +519,13 @@
   css += ".fb-unsaved-close{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:0;background:rgba(255,255,255,.1);color:#94a3b8;border-radius:50%;font-size:11px;cursor:pointer;flex-shrink:0;}";
   css += ".fb-unsaved-close:hover{color:#fff;background:rgba(255,255,255,.2);}";
   css += "@keyframes fbSlideDown{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}";
-  css += ".fb-savebtn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border:0;border-radius:999px;background:#9aa4b2;color:#fff;font:600 13px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.2);}";
-  css += ".fb-savebtn.fb-dirty{background:#1d8843;}";
-  css += ".fb-savebtn.fb-ok{background:#1d8843;}";
-  css += ".fb-savebtn.fb-err{background:#e04545;}";
-  css += ".fb-savebtn.fb-login-btn{background:#2563eb;color:#fff;}";
-  css += ".fb-savebtn.fb-login-btn:hover{background:#1d4ed8;}";
-  css += ".fb-savebtn:disabled{opacity:.85;cursor:default;}";
+  css += "button.fb-savebtn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border:0;border-radius:999px;background:#9aa4b2;color:#fff;font:600 13px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.2);}";
+  css += "button.fb-savebtn.fb-dirty{background:#1d8843;}";
+  css += "button.fb-savebtn.fb-ok{background:#1d8843;}";
+  css += "button.fb-savebtn.fb-err{background:#e04545;}";
+  css += "button.fb-savebtn.fb-login-btn{background:#2563eb;color:#fff;}";
+  css += "button.fb-savebtn.fb-login-btn:hover{background:#1d4ed8;}";
+  css += "button.fb-savebtn:disabled{opacity:.85;cursor:default;}";
   css += ".fb-toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%);z-index:10001;max-width:min(420px,92vw);padding:.75rem 1.1rem;border-radius:12px;font:600 13px/1.4 system-ui,sans-serif;color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .2s ease;}";
   css += ".fb-toast.fb-show{opacity:1;}";
   css += ".fb-toast.fb-ok{background:#1d8843;}";
@@ -532,7 +533,7 @@
   css += ".fb-form.fb-form-global{width:400px;}";
   css += ".fb-form,.fb-panel{--pfb-accent:#dc2626;--pfb-accent-hover:#b91c1c;--pfb-surface:#fff;--pfb-soft:#f4f4f5;--pfb-ink:#18181b;--pfb-muted:#52525b;--pfb-line:#e4e4e7;--pfb-hover:#ececef;--pfb-control-radius:6px;--pfb-control-size:28px;}";
   css += "body.fb-mode{touch-action:manipulation;}body.fb-mode,body.fb-mode *{cursor:crosshair!important;}body.fb-mode [data-fb-ui],body.fb-mode [data-fb-ui] *{cursor:auto!important;}";
-  css += "[data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),button[data-fb-ui]:not(:disabled),body.fb-mode [data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),body.fb-mode button[data-fb-ui]:not(:disabled),body.fb-mode .fb-panel :is(fig-button,fig-menu-item){cursor:pointer!important;}";
+  css += "[data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),button[data-fb-ui]:not(:disabled),body.fb-mode [data-fb-ui] :is(button:not(:disabled),a[href],summary,label:has(input),select,input[type=checkbox]),body.fb-mode button[data-fb-ui]:not(:disabled),body.fb-mode .fb-panel :is(fig-button,fig-menu-item,fig-segment){cursor:pointer!important;}";
   css += "body.fb-mode [data-fb-ui] :is(button,a,summary,label) :not(input){cursor:inherit!important;}[data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}body.fb-mode [data-fb-ui] :is(textarea,input[type=search],input[type=text]){cursor:text!important;}";
   css += ".fb-hover-box{position:absolute;z-index:9997;pointer-events:none;border:2px dashed #e04545;background:rgba(224,69,69,.08);border-radius:4px;}";
   css += ".fb-selected-box{position:absolute;z-index:9997;pointer-events:none;border:2px solid #e04545;background:rgba(224,69,69,.12);border-radius:4px;}";
@@ -576,8 +577,8 @@
   css += ".fb-panel .fb-panel-segment button{flex:none;min-height:34px;padding:4px 2px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--pfb-muted);font:600 14px/1.4 system-ui;box-shadow:none;text-transform:none;}.fb-panel .fb-panel-segment button:hover{color:var(--pfb-ink);}";
   css += ".fb-panel .fb-panel-segment button[aria-pressed=true]{border-bottom-color:var(--pfb-accent);color:var(--pfb-ink);}";
   css += ".fb-panel-filters{flex:none;display:flex;gap:6px;padding:0 16px 10px;border-bottom:1px solid var(--pfb-line);}";
-  css += ".fb-panel-filters select,.fb-panel-filters input{min-width:0;margin:0;height:32px;padding:4px 8px;border:1px solid var(--pfb-line);border-radius:var(--pfb-control-radius);background:var(--pfb-soft);color:var(--pfb-muted);font:400 14px system-ui;}";
-  css += ".fb-panel-filters select{width:auto;max-width:43%;}.fb-panel-filters input{flex:1;}";
+  css += ".fb-panel-filters>select,.fb-panel-filters>input{min-width:0;margin:0;height:32px;padding:4px 8px;border:1px solid var(--pfb-line);border-radius:var(--pfb-control-radius);background:var(--pfb-soft);color:var(--pfb-muted);font:400 14px system-ui;}";
+  css += ".fb-panel-filters>select{width:auto;max-width:43%;}.fb-panel-filters>input{flex:1;}";
   css += ".fb-panel :is(.fb-item-actions button,.fb-image-button,.fb-item-context,.fb-edit-actions button)[aria-label]{position:relative;}";
   css += ".fb-panel :is(.fb-item-actions button,.fb-image-button,.fb-item-context,.fb-edit-actions button)[aria-label]:is(:focus-visible,:hover:not([title]))::after{content:attr(aria-label);position:absolute;top:calc(100% + 4px);right:0;z-index:2;pointer-events:none;background:#27272a;color:#fff;padding:4px 7px;border-radius:5px;font:500 14px/1.3 system-ui,sans-serif;white-space:nowrap;box-shadow:0 2px 6px #18181b33;}";
   css += ".fb-panel :focus-visible{outline:2px solid var(--pfb-accent);outline-offset:2px;}";
@@ -596,7 +597,7 @@
   css += ".fb-item-number,.fb-item-date,.fb-item-scope{color:var(--pfb-muted);font-size:14px;}.fb-item-number{display:grid;place-items:center;min-width:30px;height:30px;padding:0 4px;background:var(--pfb-soft);border-radius:7px;font-variant-numeric:tabular-nums;}.fb-item-date{white-space:nowrap;font-variant-numeric:tabular-nums;}.fb-item-scope{white-space:nowrap;}";
   css += ".fb-item .fb-item-note{margin:1px 0 2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:var(--pfb-ink);}";
   css += ".fb-item-actions{flex:none;display:flex;gap:3px;}.fb-panel .fb-item-actions button{display:grid;place-items:center;width:var(--pfb-control-size);height:var(--pfb-control-size);margin:0;padding:0;border:0;border-radius:var(--pfb-control-radius);background:transparent;color:var(--pfb-muted);box-shadow:none;cursor:pointer;}.fb-panel .fb-item-actions button:hover{background:var(--pfb-hover);color:var(--pfb-ink);}.fb-panel .fb-item-actions button[data-fb-delete]:hover{background:#fef2f2;color:#991b1b;}.fb-item-actions svg{width:16px;height:16px;}";
-  css += ".fb-panel .fb-panel-foot .fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot .fb-savebtn:hover:not(:disabled){background:var(--pfb-hover);color:var(--pfb-ink);}.fb-panel .fb-panel-foot .fb-savebtn.fb-dirty:not(.fb-login-btn){background:var(--pfb-accent);border-color:var(--pfb-accent);color:#fff;}.fb-panel .fb-panel-foot .fb-savebtn.fb-dirty:not(.fb-login-btn):hover{background:var(--pfb-accent-hover);border-color:var(--pfb-accent-hover);color:#fff;}.fb-panel .fb-panel-foot .fb-savebtn:disabled{opacity:.55;cursor:default;}";
+  css += ".fb-panel .fb-panel-foot button.fb-savebtn{padding:6px 10px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#334155;box-shadow:none;}.fb-panel .fb-panel-foot button.fb-savebtn:hover:not(:disabled){background:var(--pfb-hover);color:var(--pfb-ink);}.fb-panel .fb-panel-foot button.fb-savebtn.fb-dirty:not(.fb-login-btn){background:var(--pfb-accent);border-color:var(--pfb-accent);color:#fff;}.fb-panel .fb-panel-foot button.fb-savebtn.fb-dirty:not(.fb-login-btn):hover{background:var(--pfb-accent-hover);border-color:var(--pfb-accent-hover);color:#fff;}.fb-panel .fb-panel-foot button.fb-savebtn:disabled{opacity:.55;cursor:default;}";
   css += ".fb-located-target{outline:3px solid #2563eb!important;outline-offset:4px!important;}";
   css += "@media(max-width:560px){.fb-panel{right:8px;bottom:76px;width:min(465px,calc(100vw - 16px));}.fb-panel-head,.fb-panel-filters,.fb-panel-list,.fb-panel-foot{padding-inline:12px;}.fb-panel-segment{margin-inline:12px;}}";
   css += "@media(max-height:430px){.fb-panel{max-height:calc(100vh - 94px);max-height:calc(100dvh - 94px);overflow:auto;overscroll-behavior:contain;}.fb-panel-list{flex:none;overflow:visible;}}";
@@ -992,7 +993,9 @@
   dock.setAttribute("data-fb-ui", "");
   document.body.appendChild(dock);
 
-  var saveBtn = document.createElement("button");
+  var saveBtn = document.createElement(
+    window.customElements && window.CSSScopeRule && customElements.get("fig-button") ? "fig-button" : "button"
+  );
   saveBtn.type = "button";
   saveBtn.className = "fb-savebtn";
   saveBtn.setAttribute("data-fb-ui", "");
@@ -1078,6 +1081,7 @@
     var pendingDeletes = loadDeleted().length;
     saveBtn.classList.remove("fb-ok", "fb-err");
     saveBtn.classList.toggle("fb-dirty", dirty);
+    saveBtn.setAttribute("variant", dirty && LOGGED_IN ? "primary" : "secondary");
     saveBtn.disabled = false;
 
     if (!LOGGED_IN) {
@@ -1431,18 +1435,29 @@
       return !entry.ip || entry.ip === CURRENT_IP;
     }).length;
     var useFig = panelUsesFigUI();
+    var headerTag = useFig ? "fig-header" : "div";
+    var footerTag = useFig ? "fig-footer" : "div";
     var head =
-      '<div class="fb-panel-head"><div class="fb-panel-heading"><strong>Feedback</strong>' +
+      '<' + headerTag + ' class="fb-panel-head"><div class="fb-panel-heading"><strong>Feedback</strong>' +
       '<span class="fb-panel-count" aria-live="polite"></span></div><div class="fb-actions">' +
       (ALLOW_NEW_FEEDBACK ? panelIconButton(useFig, "Add feedback", 'class="fb-add" data-fb-add', panelIconPaths.add, "primary") : "") +
       renderPanelOptions(useFig, allEntries.length > 0) +
       panelIconButton(useFig, "Close feedback", 'class="fb-panel-icon" data-fb-close', panelIconPaths.close) +
-      '</div></div>';
+      '</div></' + headerTag + '>';
     var ipBar = "";
     if (CURRENT_IP) {
-      ipBar = '<div class="fb-panel-segment" role="group" aria-label="Feedback scope">' +
-        '<button type="button" data-fb-filter-ip="my" aria-pressed="' + (activeIpFilter === "my") + '">My feedback (' + myCount + ')</button>' +
-        '<button type="button" data-fb-filter-ip="all" aria-pressed="' + (activeIpFilter === "all") + '">All feedback (' + allEntries.length + ')</button></div>';
+      if (useFig) {
+        var ipScope = activeIpFilter !== "my" && activeIpFilter !== "all";
+        ipBar = '<fig-segmented-control class="fb-panel-segment" data-fb-scope aria-label="Feedback scope" value="' +
+          (ipScope ? "ip" : activeIpFilter) + '">' +
+          '<fig-segment value="my">My feedback (' + myCount + ')</fig-segment>' +
+          '<fig-segment value="all">All feedback (' + allEntries.length + ')</fig-segment>' +
+          (ipScope ? '<fig-segment value="ip">By IP</fig-segment>' : "") + '</fig-segmented-control>';
+      } else {
+        ipBar = '<div class="fb-panel-segment" role="group" aria-label="Feedback scope">' +
+          '<button type="button" data-fb-filter-ip="my" aria-pressed="' + (activeIpFilter === "my") + '">My feedback (' + myCount + ')</button>' +
+          '<button type="button" data-fb-filter-ip="all" aria-pressed="' + (activeIpFilter === "all") + '">All feedback (' + allEntries.length + ')</button></div>';
+      }
       var otherIps = allIps.filter(function (ip) { return ip !== CURRENT_IP; });
       if (otherIps.length) {
         ipBar += '<div class="fb-ip-bar"><span>IP</span>';
@@ -1456,14 +1471,17 @@
     }
     var list = panel.querySelector(".fb-panel-list");
     var scrollTop = list ? list.scrollTop : 0;
-    panel.innerHTML = head + ipBar +
-      '<div class="fb-panel-filters"><input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search>' +
-      '<select aria-label="Filter by status" data-fb-status>' +
-      '<option value="">All statuses</option><option value="open">Open</option>' +
-      '<option value="needs_info">Needs reply</option><option value="done">Resolved</option></select></div>' +
-      '<div class="fb-panel-list"></div><div class="fb-panel-foot">' +
-      '<span class="fb-panel-save-status" role="status" aria-atomic="true"></span><span data-fb-save-slot></span></div>';
-    panel.querySelector("[data-fb-save-slot]").appendChild(saveBtn);
+    var statusOptions = '<option value="">All statuses</option><option value="open">Open</option>' +
+      '<option value="needs_info">Needs reply</option><option value="done">Resolved</option>';
+    var filterBar = useFig
+      ? '<fig-input-text type="search" size="large" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search></fig-input-text>' +
+        '<fig-dropdown size="large" label="Filter by status" data-fb-status>' + statusOptions + '</fig-dropdown>'
+      : '<input type="search" aria-label="Search feedback" placeholder="Search feedback…" data-fb-search>' +
+        '<select aria-label="Filter by status" data-fb-status>' + statusOptions + '</select>';
+    panel.innerHTML = head + ipBar + '<div class="fb-panel-filters">' + filterBar + '</div>' +
+      '<div class="fb-panel-list"></div><' + footerTag + ' class="fb-panel-foot">' +
+      '<span class="fb-panel-save-status" role="status" aria-atomic="true"></span></' + footerTag + '>';
+    panel.querySelector(".fb-panel-foot").appendChild(saveBtn);
     renderPanelSaveStatus();
     panel.querySelector("[data-fb-search]").value = panelQuery;
     panel.querySelector("[data-fb-status]").value = panelStatus;
@@ -1635,11 +1653,31 @@
   });
 
   panel.addEventListener("change", function (event) {
+    if (event.target.hasAttribute("data-fb-scope")) {
+      if (event.detail === "my" || event.detail === "all") {
+        var focused = event.target.contains(document.activeElement);
+        applyFeedbackScope(event.detail);
+        if (focused) {
+          var activeSegment = panel.querySelector('fig-segment[value="' + event.detail + '"]');
+          if (activeSegment) activeSegment.focus({ preventScroll: true });
+        }
+      }
+      return;
+    }
     if (!event.target.hasAttribute("data-fb-status")) return;
     captureDraftNote();
     panelStatus = event.target.value;
     renderPanelList(load());
   });
+
+  function applyFeedbackScope(value) {
+    if (!value || activeIpFilter === value) return;
+    captureDraftNote();
+    activeIpFilter = value;
+    try { localStorage.setItem(IP_FILTER_KEY, value); } catch (err) {}
+    renderMarkers();
+    renderPanel();
+  }
 
   function openFeedbackImages(button) {
     var entry = load()[findEntryIndex(button.getAttribute("data-fb-images"))];
@@ -1771,14 +1809,7 @@
     }
     var ipBtn = t.closest ? t.closest("[data-fb-filter-ip]") : null;
     if (ipBtn) {
-      var targetIp = ipBtn.getAttribute("data-fb-filter-ip");
-      if (targetIp) {
-        captureDraftNote();
-        activeIpFilter = targetIp;
-        try { localStorage.setItem(IP_FILTER_KEY, targetIp); } catch (err) {}
-        renderMarkers();
-        renderPanel();
-      }
+      applyFeedbackScope(ipBtn.getAttribute("data-fb-filter-ip"));
       return;
     }
     if (t.hasAttribute("data-fb-reload")) {
